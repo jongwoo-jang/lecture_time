@@ -53,7 +53,7 @@ body{
 
 /* 헤더 */
 .top{padding-top:calc(14px + env(safe-area-inset-top))}
-.status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-3)}
+.status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-3);cursor:pointer}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--ink-3);flex:none}
 .status[data-live="on"] .dot{background:#3FBF6B;box-shadow:0 0 0 3px rgba(63,191,107,.16)}
 .status[data-live="err"] .dot{background:#E0563F;box-shadow:none}
@@ -158,12 +158,6 @@ body{
   color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;
   padding:8px 14px;border-radius:999px;cursor:pointer}
 
-.banner{margin-top:14px;padding:11px 13px;border-radius:10px;
-  background:color-mix(in srgb,var(--hl) 40%,var(--paper));
-  border:1px solid color-mix(in srgb,var(--hl) 60%,var(--rule));
-  font-size:12.5px;line-height:1.55;color:var(--ink)}
-.banner code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
-.banner[hidden]{display:none}
 
 footer{padding:26px 0 32px;text-align:center;font-size:11px;color:var(--ink-3)}
 
@@ -201,8 +195,6 @@ footer{padding:26px 0 32px;text-align:center;font-size:11px;color:var(--ink-3)}
     </div>
   </header>
 
-  <div class="banner" id="banner" hidden></div>
-
   <section class="cal" id="cal">
     <div class="dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
     <div class="grid" id="grid"></div>
@@ -224,23 +216,26 @@ footer{padding:26px 0 32px;text-align:center;font-size:11px;color:var(--ink-3)}
    1. 설정 — 여기만 바꾸면 됩니다
    ================================================================== */
 const CONFIG = {
-  // 'csv'  = 웹에 게시한 주소 사용. 지금 이 설정입니다. 반영에 몇 분 걸립니다.
-  // 'gviz' = 즉시 반영. 아래 SHEET_ID를 채우고 시트 공유를 열어야 합니다.
-  MODE: 'csv',
+  // 'apps' = 앱스스크립트 웹앱. 시트를 비공개로 둘 수 있고 즉시 반영됩니다.
+  // 'gviz' = 시트를 공개로 열고 직접 읽기. SHEET_ID 필요.
+  // 'csv'  = 웹에 게시한 주소. 반영에 몇 분 걸립니다.
+  MODE: 'apps',
 
-  // 웹에 게시 주소. 끝을 pubhtml → pub?...&output=csv 로 바꾼 형태입니다
+  // 웹 앱 배포 후 받은 주소. .../exec 로 끝나야 합니다
+  API_URL: 'PUT_YOUR_WEB_APP_URL_HERE',
+
+  // MODE가 'csv'일 때만 사용
   CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRoLGs326k1MMHyrnrd-xlG6tc6erUNRgCmbEBa2-ZhHV3Wut03lEsnDd1UO_LO1_06_TwxC_cBCrHo/pub?gid=0&single=true&output=csv',
 
-  // MODE를 'gviz'로 바꿀 때만 필요합니다.
-  // 게시 주소가 아니라 평소 편집하는 주소의 /d/ 와 /edit 사이 문자열을 넣으세요
+  // MODE가 'gviz'일 때만 사용
   SHEET_ID: 'PUT_YOUR_SHEET_ID_HERE',
   SHEET_NAME: '시트1',
 
   // 달력 막대와 카드 색 기준: 'region' | 'division' | 'branch' | 'teacher'
   COLOR_BY: 'region',
 
-  // 자동 새로고침 주기(ms). 화면이 백그라운드로 가면 멈춥니다.
-  POLL_MS: 60000,
+  // 이 시각에만 시트를 다시 읽습니다 (24시간제)
+  UPDATE_HOURS: [9, 12, 15, 18],
 };
 
 /* 시트 첫 줄(헤더)을 아래 이름으로 찾습니다. 순서가 달라도 되고, 없는 열이 있어도 됩니다.
@@ -287,23 +282,37 @@ const $ = id => document.getElementById(id);
    ================================================================== */
 async function load({ silent = false } = {}) {
   if (!silent) setStatus('off', '시트 불러오는 중');
-  const isDemo = CONFIG.SHEET_ID === 'PUT_YOUR_SHEET_ID_HERE';
   try {
-    rows = isDemo ? sampleRows()
-         : (CONFIG.MODE === 'csv' ? await fetchCsv() : await fetchGviz());
+    rows = CONFIG.MODE === 'apps' ? await fetchApi()
+         : CONFIG.MODE === 'csv'  ? await fetchCsv()
+         : await fetchGviz();
     index();
     buildFilters();
     lastSync = Date.now();
-    setStatus('on', '방금 업데이트');
+    setStatus('on', syncLabel());
     render();
-    showBanner(isDemo
-      ? '샘플 데이터입니다. 코드 상단 <code>CONFIG.SHEET_ID</code>에 시트 ID를 넣으면 실제 데이터로 바뀝니다.'
-      : '');
   } catch (err) {
     console.error(err);
     setStatus('err', rows.length ? '새로고침 실패 · 이전 데이터 표시 중' : '불러오지 못했습니다');
     if (!rows.length) { $('grid').innerHTML = ''; $('list').innerHTML = errorBox(err); }
   }
+}
+
+/* 앱스스크립트 웹앱에서 { headers, rows } 형태로 받아옵니다.
+   헤더를 따로 붙이면 preflight 요청이 생기면서 차단되니 그냥 fetch만 합니다 */
+async function fetchApi() {
+  const u = CONFIG.API_URL;
+  if (!u || u.startsWith('PUT_')) throw new Error('API_URL이 비어 있습니다');
+  const res = await fetch(u + (u.includes('?') ? '&' : '?') + 't=' + Date.now());
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+
+  const map = mapFields(data.headers || []);
+  return (data.rows || [])
+    .map(r => normalize(map, i => ({ v: r[i] ?? null, f: r[i] ?? null })))
+    .filter(Boolean);
 }
 
 async function fetchGviz() {
@@ -592,23 +601,27 @@ function renderDay() {
 }
 
 function errorBox(err) {
+  const hint = CONFIG.MODE === 'apps'
+    ? `웹 앱 배포 설정에서 <b>액세스 권한이 있는 사용자</b>가
+       <b>모든 사용자</b>인지, <b>API_URL</b>이 /exec 로 끝나는지 확인해 주세요.`
+    : `시트 공유가 <b>링크가 있는 모든 사용자 · 뷰어</b>인지,
+       <b>SHEET_ID</b>와 <b>SHEET_NAME</b>이 맞는지 확인해 주세요.`;
   return `<div class="empty">
-    시트를 불러오지 못했습니다.<br>
-    시트 공유가 <b>링크가 있는 모든 사용자 · 뷰어</b>인지,
-    <b>SHEET_ID</b>와 <b>SHEET_NAME</b>이 맞는지 확인해 주세요.
+    데이터를 불러오지 못했습니다.<br>${hint}
     <br><small style="opacity:.7">${esc(err.message || '')}</small>
     <button type="button" onclick="load()">다시 시도</button>
   </div>`;
 }
 
-function showBanner(html) { const el = $('banner'); el.innerHTML = html; el.hidden = !html; }
 function setStatus(state, text) { $('status').dataset.live = state; $('statusText').textContent = text; }
 
-function tickAgo() {
-  if (!lastSync || $('status').dataset.live !== 'on') return;
-  const s = Math.floor((Date.now() - lastSync) / 1000);
-  $('statusText').textContent =
-    s < 15 ? '방금 업데이트' : s < 60 ? `${s}초 전 업데이트` : `${Math.floor(s / 60)}분 전 업데이트`;
+/* 마지막으로 시트를 읽은 시각과 다음 갱신 예정 시각 */
+function syncLabel() {
+  if (!lastSync) return '';
+  const d = new Date(lastSync);
+  const day = keyOf(d) === keyOf(new Date()) ? '오늘' : `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  return `${day} ${pad(d.getHours())}:${pad(d.getMinutes())} 업데이트`
+       + ` · 다음 ${pad(nextSlot().getHours())}:00`;
 }
 
 /* ==================================================================
@@ -653,16 +666,45 @@ $('cal').addEventListener('touchend', e => {
 }, { passive:true });
 
 /* ==================================================================
-   8. 자동 새로고침 — 화면이 보일 때만
+   8. 갱신 — 정해진 시각에만
    ================================================================== */
-function startPolling() { stopPolling(); timer = setInterval(() => load({ silent:true }), CONFIG.POLL_MS); }
-function stopPolling() { if (timer) clearInterval(timer); timer = null; }
+const SLOTS = [...CONFIG.UPDATE_HOURS].sort((a, b) => a - b);
+
+function slotAt(h, dayOffset = 0) {
+  const t = new Date();
+  t.setDate(t.getDate() + dayOffset);
+  t.setHours(h, 0, 0, 0);
+  return t;
+}
+function nextSlot() {
+  const now = Date.now();
+  for (const h of SLOTS) { const t = slotAt(h); if (t.getTime() > now) return t; }
+  return slotAt(SLOTS[0], 1);                    // 오늘 마지막 시각을 지났으면 내일 첫 시각
+}
+function prevSlot() {
+  const now = Date.now();
+  for (let i = SLOTS.length - 1; i >= 0; i--) { const t = slotAt(SLOTS[i]); if (t.getTime() <= now) return t; }
+  return slotAt(SLOTS[SLOTS.length - 1], -1);
+}
+
+function scheduleNext() {
+  clearTimeout(timer);
+  timer = setTimeout(() => load({ silent:true }).then(scheduleNext),
+                     Math.max(1000, nextSlot().getTime() - Date.now()));
+}
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) stopPolling();
-  else { load({ silent:true }); startPolling(); }
+  if (document.hidden) { clearTimeout(timer); timer = null; return; }
+  // 화면을 보지 않는 동안 갱신 시각이 지났으면 그때 따라잡습니다
+  if (!lastSync || lastSync < prevSlot().getTime()) load({ silent:true }).then(scheduleNext);
+  else { setStatus('on', syncLabel()); scheduleNext(); }
 });
-setInterval(tickAgo, 5000);
+
+// 상단 상태줄을 누르면 즉시 다시 읽습니다
+$('status').addEventListener('click', () => load());
+
+// '오늘' 표기와 다음 예정 시각이 시간 흐름에 맞게 유지되도록
+setInterval(() => { if ($('status').dataset.live === 'on') $('statusText').textContent = syncLabel(); }, 60000);
 
 /* ==================================================================
    9. 유틸 · 샘플
@@ -673,34 +715,8 @@ function fromKey(k){ const [y,m,d] = k.split('-').map(Number); return new Date(y
 function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-function sampleRows() {
-  const t = new Date(), y = t.getFullYear(), m = t.getMonth();
-  const raw = [
-    [3,  900, '수도권교차','강북강남','서울교차','서울','장종우'],
-    [3, 1400, '수도권교차','강서경기','광진송파교차','광진','신혜경'],
-    [5, 1000, '지방교차','부산대구','부산교차1','서면','김두기'],
-    [5, 1600, '지방교차','충청호남','광주교차','상무','백충현'],
-    [8,  900, '수도권교차','강북강남','서울교차','서울','장종우'],
-    [8, 1100, '수도권교차','강서경기','광진송파교차','광진','신혜경'],
-    [8, 1500, '지방교차','부산대구','부산교차1','서면','김두기'],
-    [8, 1830, '지방교차','충청호남','광주교차','상무','백충현'],
-    [12,1000, '수도권교차','강북강남','서울교차','서울','신혜경'],
-    [15, 900, '수도권교차','강서경기','광진송파교차','광진','장종우'],
-    [16,1000, '지방교차','부산대구','부산교차1','서면','김두기'],
-    [16,1600, '지방교차','충청호남','광주교차','상무','백충현'],
-    [20,1400, '수도권교차','강북강남','서울교차','서울','장종우'],
-    [23,1000, '지방교차','부산대구','부산교차1','서면','김두기'],
-    [26, 900, '수도권교차','강서경기','광진송파교차','광진','신혜경'],
-  ];
-  return raw.map(([d, hhmm, division, region, branch, center, teacher]) => {
-    const time = pad(Math.floor(hhmm / 100)) + ':' + pad(hhmm % 100);
-    return { date: keyOf(new Date(y, m, d)), time, division, region, branch, center, teacher,
-             title:'', status:'', note:'', sort: sortKey(time) };
-  });
-}
-
-load().then(startPolling);
-$('foot').textContent = CONFIG.MODE === 'csv' ? '웹게시 CSV · 반영까지 수 분 소요' : '구글시트 실시간 연동';
+load().then(scheduleNext);
+$('foot').textContent = '업데이트 ' + SLOTS.map(h => pad(h) + ':00').join(' · ');
 </script>
 </body>
 </html>
