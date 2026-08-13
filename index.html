@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBFBF9">
+<title>강의 현황</title>
+<style>
+/* ============================================================
+   토큰
+   ============================================================ */
+:root{
+  --paper:#FBFBF9;
+  --card:#FFFFFF;
+  --ink:#14151A;
+  --ink-2:#5C6068;
+  --ink-3:#8E939B;
+  --rule:#E5E5E0;
+
+  /* 선택/오늘 전용 형광펜 */
+  --hl:#D6F24A;
+
+  /* 지점 구분용 형광펜 */
+  --c1:#9FE3F7;
+  --c2:#FFC2DC;
+  --c3:#FFCE8F;
+  --c4:#CFC3F7;
+  --c5:#A8EBC8;
+  --c6:#F7D9A0;
+
+  --r:12px;
+  --tap:44px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#131417; --card:#191B1F;
+    --ink:#F2F2EF; --ink-2:#9A9EA6; --ink-3:#6E727A;
+    --rule:#2A2D33;
+  }
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",
+              "Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+  padding:0 0 env(safe-area-inset-bottom);
+}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px}
+
+/* ============================================================
+   헤더
+   ============================================================ */
+.top{padding-top:calc(14px + env(safe-area-inset-top))}
+.status{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--ink-3);letter-spacing:.01em;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ink-3);flex:none}
+.status[data-live="on"] .dot{background:#3FBF6B;box-shadow:0 0 0 3px rgba(63,191,107,.16)}
+.status[data-live="err"] .dot{background:#E0563F;box-shadow:none}
+
+.monthbar{display:flex;align-items:flex-end;justify-content:space-between;margin-top:6px}
+.mtitle{display:flex;align-items:baseline;gap:8px}
+.myear{font-size:13px;color:var(--ink-3);font-weight:600}
+.mnum{font-size:32px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.nav{display:flex;align-items:center;gap:2px}
+.nav button{
+  height:var(--tap);min-width:var(--tap);
+  border:0;background:none;color:var(--ink);
+  font-size:19px;font-family:inherit;cursor:pointer;border-radius:10px;
+}
+.nav .today{
+  min-width:auto;padding:0 12px;height:34px;
+  font-size:13px;font-weight:700;border:1px solid var(--rule);border-radius:999px;
+}
+.nav button:active{background:var(--rule)}
+.nav button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* ============================================================
+   필터
+   ============================================================ */
+.filters{
+  display:flex;gap:6px;margin-top:14px;
+  overflow-x:auto;scrollbar-width:none;padding-bottom:2px;
+}
+.filters::-webkit-scrollbar{display:none}
+.sel{position:relative;flex:none}
+.sel select{
+  appearance:none;-webkit-appearance:none;
+  font-family:inherit;font-size:13px;font-weight:600;
+  color:var(--ink);background:var(--card);
+  border:1px solid var(--rule);border-radius:999px;
+  padding:8px 26px 8px 13px;height:34px;
+  max-width:150px;text-overflow:ellipsis;
+}
+.sel::after{
+  content:"";position:absolute;right:11px;top:50%;
+  width:5px;height:5px;margin-top:-4px;
+  border-right:1.5px solid var(--ink-3);border-bottom:1.5px solid var(--ink-3);
+  transform:rotate(45deg);pointer-events:none;
+}
+.sel[data-on="1"] select{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.sel[data-on="1"]::after{border-color:var(--paper)}
+.reset{
+  flex:none;height:34px;padding:0 13px;border:0;background:none;
+  color:var(--ink-3);font-family:inherit;font-size:13px;font-weight:600;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;
+}
+
+/* ============================================================
+   달력
+   ============================================================ */
+.cal{margin-top:16px;touch-action:pan-y}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px}
+.dow span{
+  text-align:center;font-size:11px;font-weight:700;
+  color:var(--ink-3);letter-spacing:.06em;padding:6px 0;
+}
+.dow span:first-child{color:#D8604A}
+
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0}
+.cell{
+  position:relative;border:0;background:none;padding:5px 0 6px;
+  min-height:58px;font-family:inherit;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+.cell:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:8px}
+.cell.out{visibility:hidden;pointer-events:none}
+
+.num{
+  position:relative;z-index:1;
+  font-size:14px;font-weight:600;color:var(--ink);
+  width:28px;height:22px;display:grid;place-items:center;
+}
+.cell.sun .num{color:#D8604A}
+.cell.dim .num{color:var(--ink-3);font-weight:500}
+
+/* 형광펜 자국 — 이 화면의 시그니처 */
+.swipe{
+  position:absolute;top:5px;left:50%;
+  width:30px;height:21px;margin-left:-15px;
+  background:var(--hl);border-radius:3px 7px 4px 8px;
+  transform:rotate(-1.2deg) scaleX(0);transform-origin:left center;
+  opacity:0;pointer-events:none;
+  mix-blend-mode:multiply;
+}
+@media (prefers-color-scheme: dark){
+  .swipe{mix-blend-mode:normal}
+  .cell.sel .num{color:#14151A}
+  .cell.sel.sun .num{color:#14151A}
+}
+.cell.sel .swipe{opacity:1;transform:rotate(-1.2deg) scaleX(1);transition:transform .19s cubic-bezier(.3,.9,.4,1)}
+.cell.today .num::after{
+  content:"";position:absolute;left:4px;right:4px;bottom:1px;
+  height:2px;background:var(--ink);border-radius:2px;
+}
+
+.marks{display:flex;flex-direction:column;gap:2.5px;align-items:center;min-height:8px}
+.mark{width:18px;height:2.5px;border-radius:2px}
+.more{font-size:9px;font-weight:700;color:var(--ink-3);line-height:1;margin-top:1px}
+
+/* ============================================================
+   상세 목록
+   ============================================================ */
+.sheet{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
+.dayhead{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+.dayhead h2{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em}
+.count{font-size:12px;font-weight:600;color:var(--ink-3)}
+
+.list{display:flex;flex-direction:column;gap:8px}
+.item{
+  display:flex;gap:12px;background:var(--card);
+  border:1px solid var(--rule);border-radius:var(--r);
+  padding:13px 14px;position:relative;overflow:hidden;
+}
+.item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--bar,var(--rule))}
+.time{flex:none;width:52px;font-size:15px;font-weight:800;letter-spacing:-.02em;padding-left:2px}
+.time small{display:block;font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:0}
+.meta{min-width:0;flex:1}
+.meta .who{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.meta .where{margin-top:3px;font-size:13px;color:var(--ink-2);word-break:keep-all}
+.tag{
+  display:inline-block;font-size:11px;font-weight:700;color:#14151A;
+  background:var(--bar,var(--rule));border-radius:4px;padding:2px 6px;margin-right:5px;
+}
+
+.empty{
+  text-align:center;color:var(--ink-3);font-size:13.5px;
+  padding:28px 12px;border:1px dashed var(--rule);border-radius:var(--r);
+}
+.empty button{
+  display:block;margin:10px auto 0;border:1px solid var(--rule);background:var(--card);
+  color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;
+  padding:8px 14px;border-radius:999px;cursor:pointer;
+}
+
+.banner{
+  margin-top:14px;padding:11px 13px;border-radius:10px;
+  background:color-mix(in srgb,var(--hl) 40%,var(--paper));
+  border:1px solid color-mix(in srgb,var(--hl) 60%,var(--rule));
+  font-size:12.5px;line-height:1.55;color:var(--ink);
+}
+.banner code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
+.banner[hidden]{display:none}
+
+.skel{height:58px;border-radius:8px;background:var(--rule);opacity:.5;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.22}}
+
+footer{padding:26px 0 32px;text-align:center;font-size:11px;color:var(--ink-3)}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+  .cell.sel .swipe{transform:rotate(-1.2deg) scaleX(1)}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="status" id="status" data-live="off">
+      <span class="dot"></span><span id="statusText">시트 불러오는 중</span>
+    </div>
+    <div class="monthbar">
+      <div class="mtitle">
+        <span class="myear" id="year">2026</span>
+        <span class="mnum" id="month">8월</span>
+      </div>
+      <nav class="nav">
+        <button id="prev" aria-label="이전 달">‹</button>
+        <button class="today" id="todayBtn">오늘</button>
+        <button id="next" aria-label="다음 달">›</button>
+      </nav>
+    </div>
+
+    <div class="filters">
+      <label class="sel" id="wBranch"><select id="fBranch"><option value="">전체 지점</option></select></label>
+      <label class="sel" id="wCenter"><select id="fCenter"><option value="">전체 센터</option></select></label>
+      <label class="sel" id="wTeacher"><select id="fTeacher"><option value="">전체 강사</option></select></label>
+      <button class="reset" id="reset" hidden>초기화</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="cal" id="cal">
+    <div class="dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="sheet">
+    <div class="dayhead">
+      <h2 id="dayTitle">날짜를 선택하세요</h2>
+      <span class="count" id="dayCount"></span>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+/* ==================================================================
+   1. 설정 — 여기만 바꾸면 됩니다
+   ================================================================== */
+const CONFIG = {
+  // 시트 URL에서 /d/ 와 /edit 사이의 긴 문자열
+  // 예: docs.google.com/spreadsheets/d/[여기가 ID]/edit
+  SHEET_ID: 'PUT_YOUR_SHEET_ID_HERE',
+
+  // 하단 탭 이름 (그대로)
+  SHEET_NAME: '시트1',
+
+  // 'gviz' = 즉시 반영 (권장). 시트 공유를 '링크가 있는 모든 사용자 · 뷰어'로.
+  // 'csv'  = 파일 > 공유 > 웹에 게시 > CSV. 아래 CSV_URL 필요. 반영에 몇 분 걸림.
+  MODE: 'gviz',
+  CSV_URL: '',
+
+  // 자동 새로고침 주기(ms). 화면이 백그라운드로 가면 자동으로 멈춥니다.
+  POLL_MS: 60000,
+};
+
+/* 시트 첫 줄(헤더)은 아래 이름 중 아무거나 쓰면 자동으로 인식합니다.
+   순서가 달라도 되고, 없는 열이 있어도 됩니다. */
+const ALIASES = {
+  date:    ['일자','날짜','date','강의일','수업일'],
+  time:    ['시간','시각','time','강의시간','수업시간'],
+  branch:  ['지점','지사','branch'],
+  center:  ['센터','center','교육장'],
+  teacher: ['강사','강사명','teacher','instructor','선생님'],
+  title:   ['강의명','과목','수업명','프로그램','title'],
+  status:  ['상태','현황','진행상태','status'],
+  note:    ['비고','메모','note'],
+};
+
+/* ==================================================================
+   2. 상태
+   ================================================================== */
+const PALETTE = ['--c1','--c2','--c3','--c4','--c5','--c6'];
+const DOW = ['일','월','화','수','목','금','토'];
+
+let rows = [];                 // 정규화된 강의 목록
+let byDate = new Map();        // 'YYYY-MM-DD' -> [강의]
+let view = startOfMonth(new Date());
+let selected = keyOf(new Date());
+let filters = { branch:'', center:'', teacher:'' };
+let lastSync = null;
+let timer = null;
+let demo = false;
+
+const $ = id => document.getElementById(id);
+
+/* ==================================================================
+   3. 데이터 가져오기
+   ================================================================== */
+async function load({ silent = false } = {}) {
+  if (!silent) setStatus('off', '시트 불러오는 중');
+  try {
+    const raw = CONFIG.SHEET_ID === 'PUT_YOUR_SHEET_ID_HERE'
+      ? sampleRows()
+      : (CONFIG.MODE === 'csv' ? await fetchCsv() : await fetchGviz());
+
+    demo = CONFIG.SHEET_ID === 'PUT_YOUR_SHEET_ID_HERE';
+    rows = raw;
+    index();
+    buildFilters();
+    lastSync = Date.now();
+    setStatus('on', '방금 업데이트');
+    render();
+    showBanner(demo
+      ? '샘플 데이터입니다. 코드 상단 <code>CONFIG.SHEET_ID</code>에 시트 ID를 넣으면 실제 데이터로 바뀝니다.'
+      : '');
+  } catch (err) {
+    console.error(err);
+    setStatus('err', rows.length ? '새로고침 실패 · 이전 데이터 표시 중' : '불러오지 못했습니다');
+    if (!rows.length) {
+      $('grid').innerHTML = '';
+      $('list').innerHTML = errorBox(err);
+    }
+  }
+}
+
+async function fetchGviz() {
+  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq`
+            + `?tqx=out:json&headers=1&sheet=${encodeURIComponent(CONFIG.SHEET_NAME)}`
+            + `&t=${Date.now()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+
+  // 응답이 google.visualization.Query.setResponse({...}); 로 감싸져 있어 벗겨냅니다
+  const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+  if (json.status === 'error') throw new Error(json.errors?.[0]?.detailed_message || '시트 응답 오류');
+
+  const cols = json.table.cols.map(c => c.label || c.id);
+  const map = mapFields(cols);
+  return json.table.rows.map(r => {
+    const cells = (r.c || []).map(c => c ? { v: c.v, f: c.f } : { v: null, f: null });
+    return normalize(map, i => cells[i] || { v:null, f:null });
+  }).filter(Boolean);
+}
+
+async function fetchCsv() {
+  const url = CONFIG.CSV_URL;
+  if (!url) throw new Error('CSV_URL이 비어 있습니다');
+  const res = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now());
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const table = parseCsv(await res.text());
+  if (!table.length) return [];
+  const map = mapFields(table[0]);
+  return table.slice(1)
+    .filter(r => r.some(c => String(c).trim()))
+    .map(r => normalize(map, i => ({ v: r[i] ?? null, f: r[i] ?? null })))
+    .filter(Boolean);
+}
+
+function parseCsv(text) {
+  const out = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i+1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += c;
+    } else if (c === '"') q = true;
+    else if (c === ',') { row.push(cur); cur = ''; }
+    else if (c === '\n') { row.push(cur); out.push(row); row = []; cur = ''; }
+    else if (c !== '\r') cur += c;
+  }
+  if (cur !== '' || row.length) { row.push(cur); out.push(row); }
+  return out;
+}
+
+/* ==================================================================
+   4. 열 매칭 · 정규화
+   ================================================================== */
+function mapFields(headers) {
+  const norm = h => String(h ?? '').replace(/\s|_|-/g, '').toLowerCase();
+  const map = {};
+  headers.forEach((h, i) => {
+    const n = norm(h);
+    for (const [field, names] of Object.entries(ALIASES)) {
+      if (map[field] != null) continue;
+      if (names.some(a => norm(a) === n)) map[field] = i;
+    }
+  });
+  return map;
+}
+
+function normalize(map, cell) {
+  const get = f => map[f] == null ? null : cell(map[f]);
+  const dateCell = get('date');
+  const date = toDateKey(dateCell);
+  if (!date) return null;                       // 날짜 없는 줄은 버립니다
+
+  const rec = {
+    date,
+    time:    toTime(get('time')),
+    branch:  txt(get('branch')),
+    center:  txt(get('center')),
+    teacher: txt(get('teacher')),
+    title:   txt(get('title')),
+    status:  txt(get('status')),
+    note:    txt(get('note')),
+  };
+  rec.sort = sortKey(rec.time);
+  return rec;
+}
+
+const txt = c => c == null ? '' : String(c.f ?? c.v ?? '').trim();
+
+function toDateKey(c) {
+  if (!c) return null;
+  const v = c.v;
+
+  // gviz 날짜 셀: "Date(2026,7,13)" — 월이 0부터입니다
+  if (typeof v === 'string' && v.startsWith('Date(')) {
+    const [y, m, d] = v.slice(5, -1).split(',').map(Number);
+    return keyOf(new Date(y, m, d));
+  }
+  if (v instanceof Date) return keyOf(v);
+
+  const s = String(c.f ?? v ?? '').trim();
+  if (!s) return null;
+
+  let m = s.match(/(\d{4})\D{1,2}(\d{1,2})\D{1,2}(\d{1,2})/);        // 2026-08-13, 2026.8.13
+  if (m) return keyOf(new Date(+m[1], +m[2] - 1, +m[3]));
+
+  m = s.match(/^(\d{1,2})\D{1,2}(\d{1,2})\D?$/);                      // 8/13 (올해로 간주)
+  if (m) return keyOf(new Date(view.getFullYear(), +m[1] - 1, +m[2]));
+
+  const d = new Date(s);
+  return isNaN(d) ? null : keyOf(d);
+}
+
+function toTime(c) {
+  if (!c) return '';
+  const v = c.v;
+  if (typeof v === 'string' && v.startsWith('Date(')) {              // 시각 셀
+    const p = v.slice(5, -1).split(',').map(Number);
+    return pad(p[3] || 0) + ':' + pad(p[4] || 0);
+  }
+  const s = String(c.f ?? v ?? '').trim();
+  const m = s.match(/^(\d{1,2}):(\d{2})(:\d{2})?$/);
+  return m ? pad(+m[1]) + ':' + m[2] : s;
+}
+
+function sortKey(t) {
+  const m = String(t).match(/(\d{1,2}):(\d{2})/);
+  return m ? +m[1] * 60 + +m[2] : 9999;
+}
+
+/* ==================================================================
+   5. 인덱싱 · 필터
+   ================================================================== */
+function index() {
+  byDate = new Map();
+  for (const r of rows) {
+    if (!byDate.has(r.date)) byDate.set(r.date, []);
+    byDate.get(r.date).push(r);
+  }
+  for (const list of byDate.values()) list.sort((a, b) => a.sort - b.sort);
+}
+
+const passes = r =>
+  (!filters.branch  || r.branch  === filters.branch) &&
+  (!filters.center  || r.center  === filters.center) &&
+  (!filters.teacher || r.teacher === filters.teacher);
+
+const dayItems = key => (byDate.get(key) || []).filter(passes);
+
+function buildFilters() {
+  const fill = (id, field, label) => {
+    const el = $(id);
+    const keep = el.value;
+    const vals = [...new Set(rows.map(r => r[field]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko'));
+    el.innerHTML = `<option value="">${label}</option>`
+      + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    if (vals.includes(keep)) el.value = keep; else filters[field] = '';
+  };
+  fill('fBranch', 'branch', '전체 지점');
+  fill('fCenter', 'center', '전체 센터');
+  fill('fTeacher', 'teacher', '전체 강사');
+  syncFilterUI();
+}
+
+function syncFilterUI() {
+  $('wBranch').dataset.on  = filters.branch  ? '1' : '0';
+  $('wCenter').dataset.on  = filters.center  ? '1' : '0';
+  $('wTeacher').dataset.on = filters.teacher ? '1' : '0';
+  $('reset').hidden = !(filters.branch || filters.center || filters.teacher);
+}
+
+/* 지점마다 고정 색 — 같은 지점은 언제나 같은 형광펜 */
+const colorOf = (() => {
+  const cache = new Map();
+  return name => {
+    if (!name) return 'var(--rule)';
+    if (!cache.has(name)) {
+      let h = 0;
+      for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+      cache.set(name, `var(${PALETTE[h % PALETTE.length]})`);
+    }
+    return cache.get(name);
+  };
+})();
+
+/* ==================================================================
+   6. 렌더
+   ================================================================== */
+function render() { renderMonth(); renderDay(); }
+
+function renderMonth() {
+  $('year').textContent = view.getFullYear();
+  $('month').textContent = (view.getMonth() + 1) + '월';
+
+  const first = startOfMonth(view);
+  const start = new Date(first);
+  start.setDate(1 - first.getDay());                   // 그리드 시작 = 그 주 일요일
+  const todayKey = keyOf(new Date());
+  const cells = [];
+
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    if (i >= 35 && d.getMonth() !== view.getMonth()) break;   // 마지막 줄이 비면 생략
+
+    const key = keyOf(d);
+    const items = dayItems(key);
+    const dim = d.getMonth() !== view.getMonth();
+    const cls = ['cell'];
+    if (d.getDay() === 0) cls.push('sun');
+    if (dim) cls.push('dim');
+    if (key === selected) cls.push('sel');
+    if (key === todayKey) cls.push('today');
+
+    const branches = [...new Set(items.map(x => x.branch))];
+    const marks = branches.slice(0, 3)
+      .map(b => `<i class="mark" style="background:${colorOf(b)}"></i>`).join('');
+    const more = branches.length > 3 ? `<i class="more">+${branches.length - 3}</i>` : '';
+
+    cells.push(
+      `<button class="${cls.join(' ')}" data-key="${key}" type="button"
+               aria-label="${d.getMonth()+1}월 ${d.getDate()}일 강의 ${items.length}건"
+               ${key === selected ? 'aria-current="date"' : ''}>
+         <span class="swipe"></span>
+         <span class="num">${d.getDate()}</span>
+         <span class="marks">${marks}${more}</span>
+       </button>`
+    );
+  }
+  $('grid').innerHTML = cells.join('');
+}
+
+function renderDay() {
+  const d = fromKey(selected);
+  const items = dayItems(selected);
+  const all = byDate.get(selected) || [];
+
+  $('dayTitle').textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 ${DOW[d.getDay()]}`;
+  $('dayCount').textContent = items.length ? `강의 ${items.length}개` : '';
+
+  if (!items.length) {
+    $('list').innerHTML = all.length
+      ? `<div class="empty">필터에 맞는 강의가 없습니다.
+           <button type="button" onclick="clearFilters()">필터 초기화</button></div>`
+      : `<div class="empty">이 날짜에 등록된 강의가 없습니다.</div>`;
+    return;
+  }
+
+  $('list').innerHTML = items.map(r => {
+    const bar = colorOf(r.branch);
+    const where = [r.branch, r.center].filter(Boolean).join(' · ');
+    const who = r.title || r.teacher || '강의';
+    const sub = r.title && r.teacher ? `${r.teacher} 강사` : '';
+    return `<article class="item" style="--bar:${bar}">
+      <div class="time">${esc(r.time || '—')}${r.status ? `<small>${esc(r.status)}</small>` : ''}</div>
+      <div class="meta">
+        <div class="who">${esc(who)}</div>
+        <div class="where">
+          ${r.branch ? `<span class="tag">${esc(r.branch)}</span>` : ''}
+          ${esc([r.center, sub, r.note].filter(Boolean).join(' · '))}
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function errorBox(err) {
+  return `<div class="empty">
+    시트를 불러오지 못했습니다.<br>
+    시트 공유가 <b>링크가 있는 모든 사용자 · 뷰어</b>인지,
+    <b>SHEET_ID</b>와 <b>SHEET_NAME</b>이 맞는지 확인해 주세요.
+    <br><small style="opacity:.7">${esc(err.message || '')}</small>
+    <button type="button" onclick="load()">다시 시도</button>
+  </div>`;
+}
+
+function showBanner(html) {
+  const el = $('banner');
+  el.innerHTML = html;
+  el.hidden = !html;
+}
+
+function setStatus(state, text) {
+  $('status').dataset.live = state;
+  $('statusText').textContent = text;
+}
+
+function tickAgo() {
+  if (!lastSync || $('status').dataset.live !== 'on') return;
+  const s = Math.floor((Date.now() - lastSync) / 1000);
+  $('statusText').textContent =
+    s < 15 ? '방금 업데이트' :
+    s < 60 ? `${s}초 전 업데이트` :
+    `${Math.floor(s / 60)}분 전 업데이트`;
+}
+
+/* ==================================================================
+   7. 이벤트
+   ================================================================== */
+$('grid').addEventListener('click', e => {
+  const btn = e.target.closest('.cell');
+  if (!btn) return;
+  selected = btn.dataset.key;
+  const d = fromKey(selected);
+  if (d.getMonth() !== view.getMonth() || d.getFullYear() !== view.getFullYear()) view = startOfMonth(d);
+  render();
+});
+
+$('prev').onclick = () => shiftMonth(-1);
+$('next').onclick = () => shiftMonth(1);
+$('todayBtn').onclick = () => { const t = new Date(); view = startOfMonth(t); selected = keyOf(t); render(); };
+
+function shiftMonth(n) {
+  view = new Date(view.getFullYear(), view.getMonth() + n, 1);
+  render();
+}
+
+['fBranch','fCenter','fTeacher'].forEach(id => {
+  $(id).addEventListener('change', e => {
+    filters[{ fBranch:'branch', fCenter:'center', fTeacher:'teacher' }[id]] = e.target.value;
+    syncFilterUI();
+    render();
+  });
+});
+
+function clearFilters() {
+  filters = { branch:'', center:'', teacher:'' };
+  ['fBranch','fCenter','fTeacher'].forEach(id => $(id).value = '');
+  syncFilterUI();
+  render();
+}
+$('reset').onclick = clearFilters;
+
+// 좌우 스와이프로 달 이동
+let sx = 0, sy = 0;
+$('cal').addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive:true });
+$('cal').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+  if (Math.abs(dx) > 55 && Math.abs(dy) < 45) shiftMonth(dx < 0 ? 1 : -1);
+}, { passive:true });
+
+/* ==================================================================
+   8. 자동 새로고침 — 화면이 보일 때만 돕니다
+   ================================================================== */
+function startPolling() {
+  stopPolling();
+  timer = setInterval(() => load({ silent:true }), CONFIG.POLL_MS);
+}
+function stopPolling() { if (timer) clearInterval(timer); timer = null; }
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopPolling();
+  else { load({ silent:true }); startPolling(); }
+});
+
+setInterval(tickAgo, 5000);
+
+/* ==================================================================
+   9. 유틸 · 샘플
+   ================================================================== */
+function pad(n){ return String(n).padStart(2,'0'); }
+function keyOf(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function fromKey(k){ const [y,m,d] = k.split('-').map(Number); return new Date(y, m-1, d); }
+function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function sampleRows() {
+  const t = new Date(), y = t.getFullYear(), m = t.getMonth();
+  const raw = [
+    [1,'10:00','강남','1센터','김민준','기초 회화'],
+    [1,'14:00','강남','2센터','이서연','중급 문법'],
+    [1,'19:00','판교','A센터','박지훈','비즈니스 영어'],
+    [3,'09:30','판교','A센터','박지훈','비즈니스 영어'],
+    [3,'13:00','일산','본센터','최유진','발음 교정'],
+    [6,'11:00','강남','1센터','김민준','기초 회화'],
+    [6,'16:00','강남','1센터','정하윤','회화 심화'],
+    [6,'18:30','일산','본센터','최유진','발음 교정'],
+    [6,'20:00','판교','B센터','박지훈','토익 실전'],
+    [9,'10:00','일산','본센터','정하윤','회화 심화'],
+    [12,'14:00','강남','2센터','이서연','중급 문법'],
+    [12,'17:00','판교','A센터','박지훈','토익 실전'],
+    [15,'10:00','강남','1센터','김민준','기초 회화'],
+    [18,'13:30','일산','본센터','최유진','발음 교정'],
+    [21,'11:00','판교','B센터','정하윤','회화 심화'],
+    [24,'15:00','강남','2센터','이서연','중급 문법'],
+    [27,'10:00','판교','A센터','박지훈','비즈니스 영어'],
+  ];
+  return raw.map(([d, time, branch, center, teacher, title]) => ({
+    date: keyOf(new Date(y, m, d)), time, branch, center, teacher, title,
+    status:'', note:'', sort: sortKey(time),
+  }));
+}
+
+/* 시작 */
+load().then(startPolling);
+$('foot').textContent = CONFIG.MODE === 'csv' ? '웹게시 CSV · 반영까지 수 분 소요' : '구글시트 실시간 연동';
+</script>
+</body>
+</html>
