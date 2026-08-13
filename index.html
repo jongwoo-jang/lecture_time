@@ -48,7 +48,6 @@ body{
   font-family:inherit;font-size:16px;line-height:1;flex:none;
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-.mrow .today{padding:0 14px;font-size:12.5px;font-weight:700;margin-left:6px}
 .mrow button:active{background:#fff}
 .mrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
@@ -110,8 +109,14 @@ body{
 .cell.today .num{color:var(--accent);font-weight:800}
 .cell.sel .num{background:#fff;font-weight:800;box-shadow:0 4px 14px rgba(70,45,130,.18)}
 
-.dots{display:flex;gap:3px;height:5px;align-items:center}
-.dots i{width:5px;height:5px;border-radius:50%}
+.dots{display:flex;gap:3px;height:8px;align-items:center}
+.dots i{width:7px;height:7px;flex:none}
+.dots i.ci{border-radius:50%}
+.dots i.sq{border-radius:1.5px}
+.dots i.star{
+  width:8px;height:8px;
+  clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+}
 
 /* ── 흰 시트 ───────────────────────────────────── */
 .sheet{background:var(--sheet);border-radius:26px 26px 0 0;margin-top:-20px;
@@ -197,7 +202,6 @@ footer{padding:22px 0 30px;text-align:center;font-size:10.5px;color:var(--ink-3)
       <button id="prev" aria-label="이전 달">‹</button>
       <div class="mnum" id="month"></div>
       <button id="next" aria-label="다음 달">›</button>
-      <button class="today" id="todayBtn">오늘</button>
     </div>
 
     <div class="status" id="status" data-live="off">
@@ -277,6 +281,10 @@ const STAT_TABS = [
   { key:'branch',   label:'지점' },
   { key:'teacher',  label:'강사' },
 ];
+
+/* 달력 표식 모양 — 이름을 넣고 빼기만 하면 됩니다. 목록에 없는 강사는 원형입니다 */
+const SHAPE_STAR   = ['장종우','김남곤','임세연','신혜경','오윤정'];
+const SHAPE_SQUARE = ['성홍록','박세진','김창수','김두기','박경철','황정식','이현희'];
 
 /* [카드 배경, 원형 배지] 색 쌍 */
 const PAIRS = [
@@ -529,6 +537,14 @@ const hueOf = (() => {
 
 const colorKey = r => r[CONFIG.COLOR_BY] || r.branch || r.center;
 
+/* 공백을 지우고 비교하므로 시트에 '장 종우'처럼 띄어 써도 인식합니다 */
+function shapeOf(teacher) {
+  const n = String(teacher || '').replace(/\s/g, '');
+  if (SHAPE_STAR.includes(n)) return 'star';
+  if (SHAPE_SQUARE.includes(n)) return 'sq';
+  return 'ci';
+}
+
 /* ==================================================================
    6. 렌더
    ================================================================== */
@@ -555,8 +571,16 @@ function renderMonth() {
     if (key === selected) cls.push('sel');
     if (key === todayKey) cls.push('today');
 
-    const dots = [...new Set(items.map(colorKey))].slice(0, 3)
-      .map(g => `<i style="background:${hueOf(g)[1]}"></i>`).join('');
+    // 같은 모양·같은 색은 한 번만 찍고 최대 3개까지 보여줍니다
+    const seen = new Set(), marks = [];
+    for (const r of items) {
+      const g = colorKey(r), sh = shapeOf(r.teacher), k = sh + '|' + g;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      marks.push(`<i class="${sh}" style="background:${hueOf(g)[1]}"></i>`);
+      if (marks.length === 3) break;
+    }
+    const dots = marks.join('');
 
     cells.push(
       `<button class="${cls.join(' ')}" data-key="${key}" type="button"
@@ -601,8 +625,7 @@ function dayHtml() {
     const h = parseInt(r.time, 10);
     const ampm = isNaN(h) ? '' : (h < 12 ? '오전' : '오후');
     const title = r.title || r.branch || r.center || '강의';
-    const sub = [r.division, r.region, r.center, r.branch,
-                 r.teacher ? r.teacher + ' 강사' : '', r.status, r.note]
+    const sub = [r.division, r.region, r.center, r.branch, r.teacher, r.status, r.note]
       .filter(Boolean).filter(x => x !== title).join(' · ');
     const mark = (r.teacher || r.branch || '·').trim().charAt(0);
 
@@ -703,7 +726,6 @@ $('tabStat').onclick = () => { panel = 'stats'; renderSheet(); };
 
 $('prev').onclick = () => shiftMonth(-1);
 $('next').onclick = () => shiftMonth(1);
-$('todayBtn').onclick = () => { const t = new Date(); view = startOfMonth(t); selected = keyOf(t); render(); };
 function shiftMonth(n) { view = new Date(view.getFullYear(), view.getMonth() + n, 1); render(); }
 
 for (const f of FIELDS) {
