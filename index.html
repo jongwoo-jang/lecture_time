@@ -5,7 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#FBDCE9">
-<title>강의 현황</title>
+<title>특화마케팅팀 반상회 일정표</title>
+
+<!-- 카카오톡·슬랙 등에 링크를 붙여넣을 때 보이는 미리보기 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="특화마케팅팀 반상회 일정표">
+<meta property="og:description" content="월별 반상회 일정과 통계를 한눈에 확인합니다.">
+<meta property="og:image" content="og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="특화마케팅팀 반상회 일정표">
+<meta name="apple-mobile-web-app-title" content="반상회 일정표">
+<link rel="apple-touch-icon" href="og-image.png">
 <style>
 :root{
   --ink:#1A1723;
@@ -37,7 +47,9 @@ body{
 }
 
 .bar{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.myear{font-size:12.5px;font-weight:700;color:var(--ink-2);letter-spacing:.02em}
+.ptitle{font-size:13.5px;font-weight:800;letter-spacing:-.03em;color:var(--ink);
+  word-break:keep-all}
+.yr{font-size:12.5px;font-weight:700;color:var(--ink-2);margin-left:9px;letter-spacing:.01em}
 
 .mrow{display:flex;align-items:center;gap:4px;margin-top:2px}
 .mnum{font-size:31px;font-weight:800;letter-spacing:-.045em;line-height:1.1;
@@ -81,11 +93,16 @@ body{
   padding:0 25px 0 13px;height:32px;max-width:145px;
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-.sel::after{content:"";position:absolute;right:11px;top:50%;width:5px;height:5px;
-  margin-top:-4px;border-right:1.6px solid var(--ink-2);border-bottom:1.6px solid var(--ink-2);
-  transform:rotate(45deg);pointer-events:none}
+.sel::after{
+  content:"";position:absolute;right:10px;top:0;bottom:0;width:10px;
+  pointer-events:none;
+  background:no-repeat center/10px 6px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236E6880' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
 .sel[data-on="1"] select{background:var(--ink);color:#fff}
-.sel[data-on="1"]::after{border-color:#fff}
+.sel[data-on="1"]::after{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
 .reset{flex:none;height:32px;padding:0 10px;border:0;background:none;color:var(--ink-2);
   font-family:inherit;font-size:12.5px;font-weight:700;text-decoration:underline;
   text-underline-offset:3px;cursor:pointer}
@@ -137,7 +154,7 @@ body{
 .card{flex:1;min-width:0;display:flex;align-items:center;gap:11px;
   border-radius:20px;padding:11px 15px 11px 11px}
 .ava{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
-  color:#fff;font-size:15px;font-weight:800;letter-spacing:-.02em}
+  color:#fff;font-size:13px;font-weight:800;letter-spacing:-.04em}
 .info{min-width:0}
 .info b{display:block;font-size:14.5px;font-weight:800;letter-spacing:-.02em;
   word-break:keep-all;line-height:1.3}
@@ -181,7 +198,7 @@ footer{padding:22px 0 30px;text-align:center;font-size:10.5px;color:var(--ink-3)
 <div class="hero">
   <div class="wrap">
     <div class="bar">
-      <div class="myear" id="year"></div>
+      <div class="ptitle">특화마케팅팀 반상회 일정표</div>
       <div class="toggle">
         <button id="tabCal" aria-pressed="true" aria-label="달력 보기">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -202,6 +219,7 @@ footer{padding:22px 0 30px;text-align:center;font-size:10.5px;color:var(--ink-3)
       <button id="prev" aria-label="이전 달">‹</button>
       <div class="mnum" id="month"></div>
       <button id="next" aria-label="다음 달">›</button>
+      <span class="yr" id="year"></span>
     </div>
 
     <div class="status" id="status" data-live="off">
@@ -537,6 +555,16 @@ const hueOf = (() => {
 
 const colorKey = r => r[CONFIG.COLOR_BY] || r.branch || r.center;
 
+/* 성을 뺀 이름만 뽑습니다. 장종우 → 종우, 남궁민수 → 민수 */
+const COMPOUND = ['남궁','황보','제갈','선우','독고','사공','서문','동방','西門'];
+function givenName(full) {
+  const n = String(full || '').replace(/\s/g, '');
+  if (!n) return '·';
+  if (n.length >= 3 && COMPOUND.includes(n.slice(0, 2))) return n.slice(2);
+  if (n.length >= 3) return n.slice(1);
+  return n;                                   // 두 글자 이하 이름은 그대로
+}
+
 /* 공백을 지우고 비교하므로 시트에 '장 종우'처럼 띄어 써도 인식합니다 */
 function shapeOf(teacher) {
   const n = String(teacher || '').replace(/\s/g, '');
@@ -627,7 +655,8 @@ function dayHtml() {
     const title = r.title || r.branch || r.center || '강의';
     const sub = [r.division, r.region, r.center, r.branch, r.teacher, r.status, r.note]
       .filter(Boolean).filter(x => x !== title).join(' · ');
-    const mark = (r.teacher || r.branch || '·').trim().charAt(0);
+    const mark = r.teacher ? givenName(r.teacher)
+               : (r.branch || r.center || '·').trim().slice(0, 2);
 
     return `<div class="row">
       <div class="rail"><b>${esc(r.time || '—')}</b><span>${ampm}</span></div>
