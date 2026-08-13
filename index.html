@@ -3,187 +3,205 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#FBFBF9">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#FBDCE9">
 <title>강의 현황</title>
 <style>
 :root{
-  --paper:#FBFBF9;
-  --card:#FFFFFF;
-  --ink:#14151A;
-  --ink-2:#5C6068;
-  --ink-3:#8E939B;
-  --rule:#E5E5E0;
-
-  /* 선택/오늘 전용 형광펜 */
-  --hl:#D6F24A;
-
-  /* 구분용 형광펜 */
-  --c1:#9FE3F7;
-  --c2:#FFC2DC;
-  --c3:#FFCE8F;
-  --c4:#CFC3F7;
-  --c5:#A8EBC8;
-  --c6:#F7D9A0;
-
-  --r:12px;
+  --ink:#1A1723;
+  --ink-2:#6E6880;
+  --ink-3:#9C97AB;
+  --accent:#6D4AE0;
+  --sheet:#FFFFFF;
+  --line:#EFEDF5;
   --tap:44px;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --paper:#131417; --card:#191B1F;
-    --ink:#F2F2EF; --ink-2:#9A9EA6; --ink-3:#6E727A;
-    --rule:#2A2D33;
-  }
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
-  background:var(--paper);
+  background:var(--sheet);
   color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",
               "Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
-  font-size:15px;
-  line-height:1.5;
+  font-size:15px;line-height:1.5;
   -webkit-font-smoothing:antialiased;
   font-variant-numeric:tabular-nums;
-  padding:0 0 env(safe-area-inset-bottom);
 }
-.wrap{max-width:520px;margin:0 auto;padding:0 16px}
+.wrap{max-width:520px;margin:0 auto;padding:0 20px}
 
-/* 헤더 */
-.top{padding-top:calc(14px + env(safe-area-inset-top))}
-.status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-3);cursor:pointer}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--ink-3);flex:none}
-.status[data-live="on"] .dot{background:#3FBF6B;box-shadow:0 0 0 3px rgba(63,191,107,.16)}
-.status[data-live="err"] .dot{background:#E0563F;box-shadow:none}
-
-.monthbar{display:flex;align-items:flex-end;justify-content:space-between;margin-top:6px}
-.mtitle{display:flex;align-items:baseline;gap:8px}
-.myear{font-size:13px;color:var(--ink-3);font-weight:600}
-.mnum{font-size:32px;font-weight:800;letter-spacing:-.04em;line-height:1}
-.nav{display:flex;align-items:center;gap:2px}
-.nav button{
-  height:var(--tap);min-width:var(--tap);
-  border:0;background:none;color:var(--ink);
-  font-size:19px;font-family:inherit;cursor:pointer;border-radius:10px;
+/* ── 그라데이션 헤더 ───────────────────────────── */
+.hero{
+  background:linear-gradient(158deg,#FBDCE9 0%,#EFDEF6 38%,#DFE4FA 68%,#D6EAFA 100%);
+  padding:calc(16px + env(safe-area-inset-top)) 0 34px;
 }
-.nav .today{min-width:auto;padding:0 12px;height:34px;font-size:13px;font-weight:700;
-  border:1px solid var(--rule);border-radius:999px}
-.nav button:active{background:var(--rule)}
-.nav button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.myear{font-size:12.5px;font-weight:700;color:var(--ink-2);letter-spacing:.02em}
+
+.mrow{display:flex;align-items:center;gap:4px;margin-top:2px}
+.mnum{font-size:31px;font-weight:800;letter-spacing:-.045em;line-height:1.1;
+  min-width:74px;text-align:center}
+.mrow button{
+  height:34px;min-width:34px;border:0;border-radius:999px;cursor:pointer;
+  background:rgba(255,255,255,.6);color:var(--ink);
+  font-family:inherit;font-size:16px;line-height:1;flex:none;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.mrow .today{padding:0 14px;font-size:12.5px;font-weight:700;margin-left:6px}
+.mrow button:active{background:#fff}
+.mrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.status{display:flex;align-items:center;gap:5px;margin-top:7px;
+  font-size:11.5px;color:var(--ink-2);cursor:pointer}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--ink-3);flex:none}
+.status[data-live="on"] .dot{background:#2FBE7E}
+.status[data-live="err"] .dot{background:#F0544F}
+
+/* 달력 / 통계 전환 */
+.toggle{display:flex;gap:2px;background:rgba(255,255,255,.55);border-radius:999px;
+  padding:4px;flex:none;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.toggle button{
+  width:40px;height:36px;border:0;background:none;border-radius:999px;
+  display:grid;place-items:center;cursor:pointer;color:var(--ink-2);
+  transition:background .16s,color .16s;
+}
+.toggle button[aria-pressed="true"]{background:#fff;color:var(--ink);
+  box-shadow:0 2px 8px rgba(60,40,110,.13)}
+.toggle svg{width:19px;height:19px;display:block}
 
 /* 필터 */
-.filters{display:flex;gap:6px;margin-top:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.filters{display:flex;gap:6px;margin-top:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .filters::-webkit-scrollbar{display:none}
 .sel{position:relative;flex:none}
 .sel[hidden]{display:none}
 .sel select{
-  appearance:none;-webkit-appearance:none;
-  font-family:inherit;font-size:13px;font-weight:600;
-  color:var(--ink);background:var(--card);
-  border:1px solid var(--rule);border-radius:999px;
-  padding:8px 26px 8px 13px;height:34px;max-width:150px;text-overflow:ellipsis;
+  appearance:none;-webkit-appearance:none;font-family:inherit;
+  font-size:12.5px;font-weight:700;color:var(--ink);
+  background:rgba(255,255,255,.6);border:0;border-radius:999px;
+  padding:0 25px 0 13px;height:32px;max-width:145px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-.sel::after{
-  content:"";position:absolute;right:11px;top:50%;
-  width:5px;height:5px;margin-top:-4px;
-  border-right:1.5px solid var(--ink-3);border-bottom:1.5px solid var(--ink-3);
-  transform:rotate(45deg);pointer-events:none;
-}
-.sel[data-on="1"] select{border-color:var(--ink);background:var(--ink);color:var(--paper)}
-.sel[data-on="1"]::after{border-color:var(--paper)}
-.reset{flex:none;height:34px;padding:0 13px;border:0;background:none;
-  color:var(--ink-3);font-family:inherit;font-size:13px;font-weight:600;
-  text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.sel::after{content:"";position:absolute;right:11px;top:50%;width:5px;height:5px;
+  margin-top:-4px;border-right:1.6px solid var(--ink-2);border-bottom:1.6px solid var(--ink-2);
+  transform:rotate(45deg);pointer-events:none}
+.sel[data-on="1"] select{background:var(--ink);color:#fff}
+.sel[data-on="1"]::after{border-color:#fff}
+.reset{flex:none;height:32px;padding:0 10px;border:0;background:none;color:var(--ink-2);
+  font-family:inherit;font-size:12.5px;font-weight:700;text-decoration:underline;
+  text-underline-offset:3px;cursor:pointer}
 
 /* 달력 */
 .cal{margin-top:16px;touch-action:pan-y}
-.dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px}
-.dow span{text-align:center;font-size:11px;font-weight:700;color:var(--ink-3);
-  letter-spacing:.06em;padding:6px 0}
-.dow span:first-child{color:#D8604A}
+.cal[hidden]{display:none}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px}
+.dow span{text-align:center;font-size:10.5px;font-weight:700;color:var(--ink-2);
+  opacity:.75;letter-spacing:.08em;padding:4px 0}
 
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0}
-.cell{position:relative;border:0;background:none;padding:5px 0 6px;min-height:58px;
-  font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px}
-.cell:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:8px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cell{position:relative;border:0;background:none;padding:3px 0 4px;min-height:50px;
+  font-family:inherit;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:5px}
+.cell:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:14px}
+.num{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;
+  font-size:14.5px;font-weight:600;color:var(--ink);
+  transition:background .16s,box-shadow .16s}
+.cell.dim .num{color:var(--ink-3);opacity:.55}
+.cell.today .num{color:var(--accent);font-weight:800}
+.cell.sel .num{background:#fff;font-weight:800;box-shadow:0 4px 14px rgba(70,45,130,.18)}
 
-.num{position:relative;z-index:1;font-size:14px;font-weight:600;color:var(--ink);
-  width:28px;height:22px;display:grid;place-items:center}
-.cell.sun .num{color:#D8604A}
-.cell.dim .num{color:var(--ink-3);font-weight:500}
+.dots{display:flex;gap:3px;height:5px;align-items:center}
+.dots i{width:5px;height:5px;border-radius:50%}
 
-/* 형광펜 자국 */
-.swipe{
-  position:absolute;top:5px;left:50%;
-  width:30px;height:21px;margin-left:-15px;
-  background:var(--hl);border-radius:3px 7px 4px 8px;
-  transform:rotate(-1.2deg) scaleX(0);transform-origin:left center;
-  opacity:0;pointer-events:none;mix-blend-mode:multiply;
-}
-@media (prefers-color-scheme: dark){
-  .swipe{mix-blend-mode:normal}
-  .cell.sel .num,.cell.sel.sun .num{color:#14151A}
-}
-.cell.sel .swipe{opacity:1;transform:rotate(-1.2deg) scaleX(1);
-  transition:transform .19s cubic-bezier(.3,.9,.4,1)}
-.cell.today .num::after{content:"";position:absolute;left:4px;right:4px;bottom:1px;
-  height:2px;background:var(--ink);border-radius:2px}
+/* ── 흰 시트 ───────────────────────────────────── */
+.sheet{background:var(--sheet);border-radius:26px 26px 0 0;margin-top:-20px;
+  position:relative;z-index:1;min-height:56vh;
+  padding:22px 0 calc(40px + env(safe-area-inset-bottom))}
 
-.marks{display:flex;flex-direction:column;gap:2.5px;align-items:center;min-height:8px}
-.mark{width:18px;height:2.5px;border-radius:2px}
-.more{font-size:9px;font-weight:700;color:var(--ink-3);line-height:1;margin-top:1px}
+.shead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:16px}
+.shead h2{margin:0;font-size:18px;font-weight:800;letter-spacing:-.03em}
+.shead .n{font-size:12px;font-weight:700;color:var(--ink-3)}
 
-/* 상세 */
-.sheet{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
-.dayhead{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
-.dayhead h2{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em}
-.count{font-size:12px;font-weight:600;color:var(--ink-3)}
+/* 강의 카드 */
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:12px;align-items:stretch}
+.rail{flex:none;width:46px;padding-top:12px;text-align:right}
+.rail b{display:block;font-size:13.5px;font-weight:800;letter-spacing:-.02em}
+.rail span{display:block;font-size:10.5px;font-weight:600;color:var(--ink-3);margin-top:1px}
 
-.list{display:flex;flex-direction:column;gap:8px}
-.item{display:flex;gap:12px;background:var(--card);border:1px solid var(--rule);
-  border-radius:var(--r);padding:13px 14px;position:relative;overflow:hidden}
-.item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--bar,var(--rule))}
-.time{flex:none;width:50px;font-size:15px;font-weight:800;letter-spacing:-.02em;padding-left:2px}
-.meta{min-width:0;flex:1}
-.meta .who{font-size:15px;font-weight:700;letter-spacing:-.01em;word-break:keep-all}
-.meta .where{margin-top:4px;font-size:13px;color:var(--ink-2);word-break:keep-all}
-.tag{display:inline-block;font-size:11px;font-weight:700;color:#14151A;
-  background:var(--bar,var(--rule));border-radius:4px;padding:2px 6px;margin-right:5px}
+.card{flex:1;min-width:0;display:flex;align-items:center;gap:11px;
+  border-radius:20px;padding:11px 15px 11px 11px}
+.ava{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  color:#fff;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.info{min-width:0}
+.info b{display:block;font-size:14.5px;font-weight:800;letter-spacing:-.02em;
+  word-break:keep-all;line-height:1.3}
+.info span{display:block;font-size:12.5px;color:var(--ink-2);margin-top:2px;
+  word-break:keep-all;line-height:1.35}
 
-.empty{text-align:center;color:var(--ink-3);font-size:13.5px;padding:28px 12px;
-  border:1px dashed var(--rule);border-radius:var(--r)}
-.empty button{display:block;margin:10px auto 0;border:1px solid var(--rule);background:var(--card);
-  color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;
-  padding:8px 14px;border-radius:999px;cursor:pointer}
+/* 통계 */
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.mini{background:#F7F6FB;border-radius:16px;padding:13px 12px;text-align:center}
+.mini b{display:block;font-size:21px;font-weight:800;letter-spacing:-.04em}
+.mini span{display:block;font-size:11px;font-weight:600;color:var(--ink-2);margin-top:2px}
 
+.tabs{display:flex;gap:5px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;height:32px;padding:0 14px;border:0;border-radius:999px;
+  background:#F2F1F7;color:var(--ink-2);font-family:inherit;font-size:12.5px;
+  font-weight:700;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:#fff}
 
-footer{padding:26px 0 32px;text-align:center;font-size:11px;color:var(--ink-3)}
+.stats{display:flex;flex-direction:column;gap:13px}
+.stat .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.stat .nm{font-size:13.5px;font-weight:700;letter-spacing:-.01em;word-break:keep-all}
+.stat .ct{font-size:12.5px;font-weight:800;color:var(--ink-2);flex:none}
+.track{height:8px;border-radius:999px;background:#F2F1F7;overflow:hidden}
+.track i{display:block;height:100%;border-radius:999px;transition:width .3s ease}
 
-@media (prefers-reduced-motion: reduce){
-  *{animation:none!important;transition:none!important}
-  .cell.sel .swipe{transform:rotate(-1.2deg) scaleX(1)}
-}
+.empty{text-align:center;color:var(--ink-3);font-size:13.5px;padding:34px 14px;
+  background:#F9F8FC;border-radius:18px;line-height:1.6}
+.empty button{display:block;margin:12px auto 0;border:0;background:var(--ink);color:#fff;
+  font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 16px;
+  border-radius:999px;cursor:pointer}
+.empty b{color:var(--ink-2)}
+
+footer{padding:22px 0 30px;text-align:center;font-size:10.5px;color:var(--ink-3)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <header class="top">
-    <div class="status" id="status" data-live="off">
-      <span class="dot"></span><span id="statusText">시트 불러오는 중</span>
-    </div>
-    <div class="monthbar">
-      <div class="mtitle">
-        <span class="myear" id="year"></span>
-        <span class="mnum" id="month"></span>
+<div class="hero">
+  <div class="wrap">
+    <div class="bar">
+      <div class="myear" id="year"></div>
+      <div class="toggle">
+        <button id="tabCal" aria-pressed="true" aria-label="달력 보기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>
+          </svg>
+        </button>
+        <button id="tabStat" aria-pressed="false" aria-label="통계 보기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round">
+            <path d="M5 20V10M12 20V4M19 20v-6"/>
+          </svg>
+        </button>
       </div>
-      <nav class="nav">
-        <button id="prev" aria-label="이전 달">‹</button>
-        <button class="today" id="todayBtn">오늘</button>
-        <button id="next" aria-label="다음 달">›</button>
-      </nav>
+    </div>
+
+    <div class="mrow">
+      <button id="prev" aria-label="이전 달">‹</button>
+      <div class="mnum" id="month"></div>
+      <button id="next" aria-label="다음 달">›</button>
+      <button class="today" id="todayBtn">오늘</button>
+    </div>
+
+    <div class="status" id="status" data-live="off">
+      <span class="dot"></span><span id="statusText">불러오는 중</span>
     </div>
 
     <div class="filters">
@@ -193,21 +211,16 @@ footer{padding:26px 0 32px;text-align:center;font-size:11px;color:var(--ink-3)}
       <label class="sel" id="wTeacher"><select id="fTeacher"></select></label>
       <button class="reset" id="reset" hidden>초기화</button>
     </div>
-  </header>
 
-  <section class="cal" id="cal">
-    <div class="dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
-    <div class="grid" id="grid"></div>
-  </section>
+    <section class="cal" id="cal">
+      <div class="dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </div>
+</div>
 
-  <section class="sheet">
-    <div class="dayhead">
-      <h2 id="dayTitle">날짜를 선택하세요</h2>
-      <span class="count" id="dayCount"></span>
-    </div>
-    <div class="list" id="list"></div>
-  </section>
-
+<div class="sheet">
+  <div class="wrap" id="sheetBody"></div>
   <footer id="foot"></footer>
 </div>
 
@@ -216,30 +229,26 @@ footer{padding:26px 0 32px;text-align:center;font-size:11px;color:var(--ink-3)}
    1. 설정 — 여기만 바꾸면 됩니다
    ================================================================== */
 const CONFIG = {
-  // 'apps' = 앱스스크립트 웹앱. 시트를 비공개로 둘 수 있고 즉시 반영됩니다.
+  // 'apps' = 앱스스크립트 웹앱 (현재 설정). 시트를 비공개로 둘 수 있고 즉시 반영됩니다.
   // 'gviz' = 시트를 공개로 열고 직접 읽기. SHEET_ID 필요.
   // 'csv'  = 웹에 게시한 주소. 반영에 몇 분 걸립니다.
   MODE: 'apps',
 
-  // 웹 앱 배포 후 받은 주소. .../exec 로 끝나야 합니다
   API_URL: 'https://script.google.com/macros/s/AKfycbxkavyA19xksQboxRk85VERhk-hzCEPA8ST0aButxNMpVLH7SAjMXVlIrw9XPo946Mw/exec',
 
-  // MODE가 'csv'일 때만 사용
   CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRoLGs326k1MMHyrnrd-xlG6tc6erUNRgCmbEBa2-ZhHV3Wut03lEsnDd1UO_LO1_06_TwxC_cBCrHo/pub?gid=0&single=true&output=csv',
 
-  // MODE가 'gviz'일 때만 사용
   SHEET_ID: 'PUT_YOUR_SHEET_ID_HERE',
   SHEET_NAME: '시트1',
 
-  // 달력 막대와 카드 색 기준: 'region' | 'division' | 'branch' | 'teacher'
+  // 카드 색과 달력 점의 기준: 'region' | 'division' | 'branch' | 'teacher'
   COLOR_BY: 'region',
 
   // 이 시각에만 시트를 다시 읽습니다 (24시간제)
   UPDATE_HOURS: [9, 12, 15, 18],
 };
 
-/* 시트 첫 줄(헤더)을 아래 이름으로 찾습니다. 순서가 달라도 되고, 없는 열이 있어도 됩니다.
-   헤더 이름을 다르게 쓰신다면 해당 줄에 추가만 하면 인식됩니다. */
+/* 시트 첫 줄(헤더)을 아래 이름으로 찾습니다. 순서가 달라도 되고, 없는 열이 있어도 됩니다 */
 const ALIASES = {
   date:     ['일자','날짜','date','강의일','수업일'],
   time:     ['시간','시각','time','강의시간','수업시간'],
@@ -253,7 +262,7 @@ const ALIASES = {
   note:     ['비고','메모','note'],
 };
 
-/* 필터 목록 — 순서대로 칩이 표시되고, 앞의 선택이 뒤의 목록을 좁힙니다 */
+/* 상단 필터 — 앞의 선택이 뒤의 목록을 좁힙니다 */
 const FIELDS = [
   { key:'division', id:'fDivision', wrap:'wDivision', label:'전체 영업부' },
   { key:'region',   id:'fRegion',   wrap:'wRegion',   label:'전체 권역' },
@@ -261,10 +270,27 @@ const FIELDS = [
   { key:'teacher',  id:'fTeacher',  wrap:'wTeacher',  label:'전체 강사' },
 ];
 
+/* 통계 탭 */
+const STAT_TABS = [
+  { key:'division', label:'영업부' },
+  { key:'region',   label:'권역' },
+  { key:'branch',   label:'지점' },
+  { key:'teacher',  label:'강사' },
+];
+
+/* [카드 배경, 원형 배지] 색 쌍 */
+const PAIRS = [
+  ['#FFE1E7','#FF7A93'],
+  ['#E6E2FF','#7B6BF0'],
+  ['#DAEEFF','#3EA0F0'],
+  ['#DDF5E8','#2FBE7E'],
+  ['#FFEBD4','#FF9F45'],
+  ['#F3E4FF','#B06BE8'],
+];
+
 /* ==================================================================
    2. 상태
    ================================================================== */
-const PALETTE = ['--c1','--c2','--c3','--c4','--c5','--c6'];
 const DOW = ['일','월','화','수','목','금','토'];
 
 let rows = [];
@@ -272,6 +298,8 @@ let byDate = new Map();
 let view = startOfMonth(new Date());
 let selected = keyOf(new Date());
 let filters = { division:'', region:'', branch:'', teacher:'' };
+let panel = 'cal';                       // 'cal' | 'stats'
+let statBy = 'branch';
 let lastSync = null;
 let timer = null;
 
@@ -281,7 +309,7 @@ const $ = id => document.getElementById(id);
    3. 데이터 가져오기
    ================================================================== */
 async function load({ silent = false } = {}) {
-  if (!silent) setStatus('off', '시트 불러오는 중');
+  if (!silent) setStatus('off', '불러오는 중');
   try {
     rows = CONFIG.MODE === 'apps' ? await fetchApi()
          : CONFIG.MODE === 'csv'  ? await fetchCsv()
@@ -293,19 +321,18 @@ async function load({ silent = false } = {}) {
     render();
   } catch (err) {
     console.error(err);
-    setStatus('err', rows.length ? '새로고침 실패 · 이전 데이터 표시 중' : '불러오지 못했습니다');
-    if (!rows.length) { $('grid').innerHTML = ''; $('list').innerHTML = errorBox(err); }
+    setStatus('err', rows.length ? '새로고침 실패' : '불러오지 못했습니다');
+    if (!rows.length) { $('grid').innerHTML = ''; $('sheetBody').innerHTML = errorBox(err); }
   }
 }
 
-/* 앱스스크립트 웹앱에서 { headers, rows } 형태로 받아옵니다.
-   헤더를 따로 붙이면 preflight 요청이 생기면서 차단되니 그냥 fetch만 합니다 */
+/* 앱스스크립트 웹앱에서 { headers, rows } 형태로 받습니다.
+   헤더를 붙이면 preflight 요청이 생겨 차단되니 그냥 fetch만 합니다 */
 async function fetchApi() {
   const u = CONFIG.API_URL;
   if (!u || u.startsWith('PUT_')) throw new Error('API_URL이 비어 있습니다');
   const res = await fetch(u + (u.includes('?') ? '&' : '?') + 't=' + Date.now());
   if (!res.ok) throw new Error('HTTP ' + res.status);
-
   const data = await res.json();
   if (data.error) throw new Error(data.error);
 
@@ -321,18 +348,14 @@ async function fetchGviz() {
   const res = await fetch(url);
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const text = await res.text();
-
-  // 응답이 google.visualization.Query.setResponse({...}); 로 감싸져 있어 벗겨냅니다
   const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
   if (json.status === 'error') throw new Error(json.errors?.[0]?.detailed_message || '시트 응답 오류');
 
   const map = mapFields(json.table.cols.map(c => c.label || c.id));
-  return json.table.rows
-    .map(r => {
-      const cells = (r.c || []).map(c => c ? { v:c.v, f:c.f } : { v:null, f:null });
-      return normalize(map, i => cells[i] || { v:null, f:null });
-    })
-    .filter(Boolean);
+  return json.table.rows.map(r => {
+    const cells = (r.c || []).map(c => c ? { v:c.v, f:c.f } : { v:null, f:null });
+    return normalize(map, i => cells[i] || { v:null, f:null });
+  }).filter(Boolean);
 }
 
 async function fetchCsv() {
@@ -383,7 +406,7 @@ function mapFields(headers) {
 function normalize(map, cell) {
   const get = f => map[f] == null ? null : cell(map[f]);
   const date = toDateKey(get('date'));
-  if (!date) return null;                      // 날짜를 못 읽은 줄은 건너뜁니다
+  if (!date) return null;
 
   const rec = {
     date,
@@ -412,11 +435,7 @@ function ymd8(s) {
 function toDateKey(c) {
   if (!c) return null;
   const v = c.v;
-
-  // 20260815 처럼 숫자로 들어온 YYYYMMDD
   if (typeof v === 'number' && v >= 19000101 && v <= 29991231) return ymd8(String(Math.trunc(v)));
-
-  // 날짜 서식 셀은 gviz가 "Date(2026,7,13)" 로 줍니다. 월이 0부터라 그대로 넣습니다
   if (typeof v === 'string' && v.startsWith('Date(')) {
     const [y, m, d] = v.slice(5, -1).split(',').map(Number);
     return keyOf(new Date(y, m, d));
@@ -427,10 +446,9 @@ function toDateKey(c) {
   if (!s) return null;
   if (/^\d{8}$/.test(s)) return ymd8(s);
 
-  let m = s.match(/(\d{4})\D{1,2}(\d{1,2})\D{1,2}(\d{1,2})/);   // 2026-08-15, 2026.8.15
+  let m = s.match(/(\d{4})\D{1,2}(\d{1,2})\D{1,2}(\d{1,2})/);
   if (m) return keyOf(new Date(+m[1], +m[2] - 1, +m[3]));
-
-  m = s.match(/^(\d{1,2})\D{1,2}(\d{1,2})$/);                    // 8/15 → 보고 있는 연도로
+  m = s.match(/^(\d{1,2})\D{1,2}(\d{1,2})$/);
   if (m) return keyOf(new Date(view.getFullYear(), +m[1] - 1, +m[2]));
 
   const d = new Date(s);
@@ -440,24 +458,16 @@ function toDateKey(c) {
 function toTime(c) {
   if (!c) return '';
   const v = c.v;
-
   if (typeof v === 'number') {
-    if (v > 0 && v < 1) {                       // 시간 서식(0.375 = 09:00)
-      const t = Math.round(v * 1440);
-      return pad(Math.floor(t / 60)) + ':' + pad(t % 60);
-    }
-    if (v >= 0 && v <= 2359) {                  // 900, 1000, 1600
-      const n = Math.trunc(v);
-      return pad(Math.floor(n / 100)) + ':' + pad(n % 100);
-    }
+    if (v > 0 && v < 1) { const t = Math.round(v * 1440); return pad(Math.floor(t/60)) + ':' + pad(t%60); }
+    if (v >= 0 && v <= 2359) { const n = Math.trunc(v); return pad(Math.floor(n/100)) + ':' + pad(n%100); }
   }
   if (typeof v === 'string' && v.startsWith('Date(')) {
     const p = v.slice(5, -1).split(',').map(Number);
     return pad(p[3] || 0) + ':' + pad(p[4] || 0);
   }
-
   const s = String(v ?? c.f ?? '').replace(/[\s,]/g, '');
-  if (/^\d{3,4}$/.test(s)) { const n = +s; return pad(Math.floor(n / 100)) + ':' + pad(n % 100); }
+  if (/^\d{3,4}$/.test(s)) { const n = +s; return pad(Math.floor(n/100)) + ':' + pad(n%100); }
   const m = s.match(/^(\d{1,2}):(\d{2})/);
   if (m) return pad(+m[1]) + ':' + m[2];
   return String(c.f ?? v ?? '').trim();
@@ -469,7 +479,7 @@ function sortKey(t) {
 }
 
 /* ==================================================================
-   5. 인덱싱 · 필터
+   5. 인덱싱 · 필터 · 색
    ================================================================== */
 function index() {
   byDate = new Map();
@@ -484,8 +494,9 @@ const passes = (r, except) =>
   FIELDS.every(f => f.key === except || !filters[f.key] || r[f.key] === filters[f.key]);
 
 const dayItems = key => (byDate.get(key) || []).filter(r => passes(r));
+const monthItems = () => rows.filter(r =>
+  passes(r) && r.date.slice(0, 7) === keyOf(view).slice(0, 7));
 
-/* 앞선 선택에 맞춰 뒤쪽 목록을 좁힙니다 */
 function buildFilters() {
   for (const f of FIELDS) {
     const el = $(f.id);
@@ -496,22 +507,21 @@ function buildFilters() {
     el.innerHTML = `<option value="">${f.label}</option>`
       + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
     el.value = filters[f.key];
-
     $(f.wrap).dataset.on = filters[f.key] ? '1' : '0';
-    $(f.wrap).hidden = vals.length === 0;       // 시트에 없는 열은 칩을 숨깁니다
+    $(f.wrap).hidden = vals.length === 0;
   }
   $('reset').hidden = !FIELDS.some(f => filters[f.key]);
 }
 
-/* 같은 이름은 언제나 같은 형광펜 색 */
-const colorOf = (() => {
+/* 같은 이름은 언제나 같은 색 */
+const hueOf = (() => {
   const cache = new Map();
   return name => {
-    if (!name) return 'var(--rule)';
+    if (!name) return ['#F1F0F6', '#B7B3C4'];
     if (!cache.has(name)) {
       let h = 0;
       for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-      cache.set(name, `var(${PALETTE[h % PALETTE.length]})`);
+      cache.set(name, PAIRS[h % PAIRS.length]);
     }
     return cache.get(name);
   };
@@ -522,10 +532,10 @@ const colorKey = r => r[CONFIG.COLOR_BY] || r.branch || r.center;
 /* ==================================================================
    6. 렌더
    ================================================================== */
-function render() { renderMonth(); renderDay(); }
+function render() { renderMonth(); renderSheet(); }
 
 function renderMonth() {
-  $('year').textContent = view.getFullYear();
+  $('year').textContent = view.getFullYear() + '년';
   $('month').textContent = (view.getMonth() + 1) + '월';
 
   const first = startOfMonth(view);
@@ -541,87 +551,131 @@ function renderMonth() {
     const key = keyOf(d);
     const items = dayItems(key);
     const cls = ['cell'];
-    if (d.getDay() === 0) cls.push('sun');
     if (d.getMonth() !== view.getMonth()) cls.push('dim');
     if (key === selected) cls.push('sel');
     if (key === todayKey) cls.push('today');
 
-    const groups = [...new Set(items.map(colorKey))];
-    const marks = groups.slice(0, 3).map(g => `<i class="mark" style="background:${colorOf(g)}"></i>`).join('');
-    const more = groups.length > 3 ? `<i class="more">+${groups.length - 3}</i>` : '';
+    const dots = [...new Set(items.map(colorKey))].slice(0, 3)
+      .map(g => `<i style="background:${hueOf(g)[1]}"></i>`).join('');
 
     cells.push(
       `<button class="${cls.join(' ')}" data-key="${key}" type="button"
                aria-label="${d.getMonth()+1}월 ${d.getDate()}일 강의 ${items.length}건"
                ${key === selected ? 'aria-current="date"' : ''}>
-         <span class="swipe"></span>
          <span class="num">${d.getDate()}</span>
-         <span class="marks">${marks}${more}</span>
+         <span class="dots">${dots}</span>
        </button>`
     );
   }
   $('grid').innerHTML = cells.join('');
 }
 
-function renderDay() {
+function renderSheet() {
+  const stats = panel === 'stats';
+  $('tabCal').setAttribute('aria-pressed', !stats);
+  $('tabStat').setAttribute('aria-pressed', stats);
+  $('cal').hidden = stats;                    // 통계에서는 달력을 감춥니다
+  $('sheetBody').innerHTML = stats ? statsHtml() : dayHtml();
+}
+
+/* ── 날짜별 강의 목록 ── */
+function dayHtml() {
   const d = fromKey(selected);
   const items = dayItems(selected);
   const all = byDate.get(selected) || [];
 
-  $('dayTitle').textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 ${DOW[d.getDay()]}`;
-  $('dayCount').textContent = items.length ? `강의 ${items.length}개` : '';
+  const head = `<div class="shead">
+      <h2>${d.getMonth() + 1}월 ${d.getDate()}일 ${DOW[d.getDay()]}</h2>
+      <span class="n">${items.length ? '강의 ' + items.length + '건' : ''}</span>
+    </div>`;
 
   if (!items.length) {
-    $('list').innerHTML = all.length
+    return head + (all.length
       ? `<div class="empty">필터에 맞는 강의가 없습니다.
            <button type="button" onclick="clearFilters()">필터 초기화</button></div>`
-      : `<div class="empty">이 날짜에 등록된 강의가 없습니다.</div>`;
-    return;
+      : `<div class="empty">이 날짜에 등록된 강의가 없습니다.</div>`);
   }
 
-  $('list').innerHTML = items.map(r => {
-    const tag  = colorKey(r);
-    const head = r.title || r.branch || r.center || '강의';
-    const sub  = [r.division, r.region, r.center, r.branch,
-                  r.teacher ? r.teacher + ' 강사' : '', r.status, r.note]
-      .filter(Boolean)
-      .filter(x => x !== tag && x !== head)     // 큰 줄·태그와 겹치는 값은 뺍니다
-      .join(' · ');
+  const list = items.map(r => {
+    const [soft, solid] = hueOf(colorKey(r));
+    const h = parseInt(r.time, 10);
+    const ampm = isNaN(h) ? '' : (h < 12 ? '오전' : '오후');
+    const title = r.title || r.branch || r.center || '강의';
+    const sub = [r.division, r.region, r.center, r.branch,
+                 r.teacher ? r.teacher + ' 강사' : '', r.status, r.note]
+      .filter(Boolean).filter(x => x !== title).join(' · ');
+    const mark = (r.teacher || r.branch || '·').trim().charAt(0);
 
-    return `<article class="item" style="--bar:${colorOf(tag)}">
-      <div class="time">${esc(r.time || '—')}</div>
-      <div class="meta">
-        <div class="who">${esc(head)}</div>
-        <div class="where">
-          ${tag ? `<span class="tag">${esc(tag)}</span>` : ''}${esc(sub)}
-        </div>
+    return `<div class="row">
+      <div class="rail"><b>${esc(r.time || '—')}</b><span>${ampm}</span></div>
+      <div class="card" style="background:${soft}">
+        <div class="ava" style="background:${solid}">${esc(mark)}</div>
+        <div class="info"><b>${esc(title)}</b><span>${esc(sub)}</span></div>
       </div>
-    </article>`;
+    </div>`;
   }).join('');
+
+  return head + `<div class="list">${list}</div>`;
+}
+
+/* ── 통계 ── */
+function statsHtml() {
+  const items = monthItems();
+  const head = `<div class="shead">
+      <h2>${view.getMonth() + 1}월 통계</h2>
+      <span class="n">${FIELDS.some(f => filters[f.key]) ? '필터 적용됨' : '전체'}</span>
+    </div>`;
+
+  if (!items.length) return head + `<div class="empty">이 달에 집계할 강의가 없습니다.</div>`;
+
+  const days = new Set(items.map(r => r.date)).size;
+  const people = new Set(items.map(r => r.teacher).filter(Boolean)).size;
+  const mini = `<div class="cards3">
+      <div class="mini"><b>${items.length}</b><span>총 강의</span></div>
+      <div class="mini"><b>${days}</b><span>강의일</span></div>
+      <div class="mini"><b>${people}</b><span>강사</span></div>
+    </div>`;
+
+  const tabs = `<div class="tabs">` + STAT_TABS.map(t =>
+    `<button type="button" data-stat="${t.key}" aria-pressed="${statBy === t.key}">${t.label}</button>`
+  ).join('') + `</div>`;
+
+  const tally = new Map();
+  for (const r of items) {
+    const k = r[statBy] || '미지정';
+    tally.set(k, (tally.get(k) || 0) + 1);
+  }
+  const ranked = [...tally.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'));
+  const max = ranked[0][1];
+
+  const bars = ranked.map(([name, n]) => {
+    const solid = hueOf(name)[1];
+    return `<div class="stat">
+      <div class="top"><span class="nm">${esc(name)}</span><span class="ct">${n}회</span></div>
+      <div class="track"><i style="width:${Math.round(n / max * 100)}%;background:${solid}"></i></div>
+    </div>`;
+  }).join('');
+
+  return head + mini + tabs + `<div class="stats">${bars}</div>`;
 }
 
 function errorBox(err) {
   const hint = CONFIG.MODE === 'apps'
-    ? `웹 앱 배포 설정에서 <b>액세스 권한이 있는 사용자</b>가
-       <b>모든 사용자</b>인지, <b>API_URL</b>이 /exec 로 끝나는지 확인해 주세요.`
-    : `시트 공유가 <b>링크가 있는 모든 사용자 · 뷰어</b>인지,
-       <b>SHEET_ID</b>와 <b>SHEET_NAME</b>이 맞는지 확인해 주세요.`;
-  return `<div class="empty">
-    데이터를 불러오지 못했습니다.<br>${hint}
-    <br><small style="opacity:.7">${esc(err.message || '')}</small>
-    <button type="button" onclick="load()">다시 시도</button>
-  </div>`;
+    ? `웹 앱 배포에서 <b>액세스 권한이 있는 사용자</b>가 <b>모든 사용자</b>인지,
+       주소가 <b>/exec</b>로 끝나는지 확인해 주세요.`
+    : `시트 공유가 <b>링크가 있는 모든 사용자 · 뷰어</b>인지 확인해 주세요.`;
+  return `<div class="empty">데이터를 불러오지 못했습니다.<br>${hint}
+    <br><b>${esc(err.message || '')}</b>
+    <button type="button" onclick="load()">다시 시도</button></div>`;
 }
 
 function setStatus(state, text) { $('status').dataset.live = state; $('statusText').textContent = text; }
 
-/* 마지막으로 시트를 읽은 시각과 다음 갱신 예정 시각 */
 function syncLabel() {
   if (!lastSync) return '';
   const d = new Date(lastSync);
   const day = keyOf(d) === keyOf(new Date()) ? '오늘' : `${d.getMonth() + 1}월 ${d.getDate()}일`;
-  return `${day} ${pad(d.getHours())}:${pad(d.getMinutes())} 업데이트`
-       + ` · 다음 ${pad(nextSlot().getHours())}:00`;
+  return `${day} ${pad(d.getHours())}:${pad(d.getMinutes())} 업데이트 · 다음 ${pad(nextSlot().getHours())}:00`;
 }
 
 /* ==================================================================
@@ -633,13 +687,23 @@ $('grid').addEventListener('click', e => {
   selected = btn.dataset.key;
   const d = fromKey(selected);
   if (d.getMonth() !== view.getMonth() || d.getFullYear() !== view.getFullYear()) view = startOfMonth(d);
+  panel = 'cal';                              // 날짜를 고르면 목록으로 돌아옵니다
   render();
 });
+
+$('sheetBody').addEventListener('click', e => {
+  const b = e.target.closest('[data-stat]');
+  if (!b) return;
+  statBy = b.dataset.stat;
+  renderSheet();
+});
+
+$('tabCal').onclick = () => { panel = 'cal'; renderSheet(); };
+$('tabStat').onclick = () => { panel = 'stats'; renderSheet(); };
 
 $('prev').onclick = () => shiftMonth(-1);
 $('next').onclick = () => shiftMonth(1);
 $('todayBtn').onclick = () => { const t = new Date(); view = startOfMonth(t); selected = keyOf(t); render(); };
-
 function shiftMonth(n) { view = new Date(view.getFullYear(), view.getMonth() + n, 1); render(); }
 
 for (const f of FIELDS) {
@@ -649,15 +713,9 @@ for (const f of FIELDS) {
     render();
   });
 }
-
-function clearFilters() {
-  for (const f of FIELDS) filters[f.key] = '';
-  buildFilters();
-  render();
-}
+function clearFilters() { for (const f of FIELDS) filters[f.key] = ''; buildFilters(); render(); }
 $('reset').onclick = clearFilters;
 
-// 좌우 스와이프로 달 이동
 let sx = 0, sy = 0;
 $('cal').addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive:true });
 $('cal').addEventListener('touchend', e => {
@@ -679,14 +737,13 @@ function slotAt(h, dayOffset = 0) {
 function nextSlot() {
   const now = Date.now();
   for (const h of SLOTS) { const t = slotAt(h); if (t.getTime() > now) return t; }
-  return slotAt(SLOTS[0], 1);                    // 오늘 마지막 시각을 지났으면 내일 첫 시각
+  return slotAt(SLOTS[0], 1);
 }
 function prevSlot() {
   const now = Date.now();
   for (let i = SLOTS.length - 1; i >= 0; i--) { const t = slotAt(SLOTS[i]); if (t.getTime() <= now) return t; }
   return slotAt(SLOTS[SLOTS.length - 1], -1);
 }
-
 function scheduleNext() {
   clearTimeout(timer);
   timer = setTimeout(() => load({ silent:true }).then(scheduleNext),
@@ -695,19 +752,15 @@ function scheduleNext() {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { clearTimeout(timer); timer = null; return; }
-  // 화면을 보지 않는 동안 갱신 시각이 지났으면 그때 따라잡습니다
   if (!lastSync || lastSync < prevSlot().getTime()) load({ silent:true }).then(scheduleNext);
   else { setStatus('on', syncLabel()); scheduleNext(); }
 });
 
-// 상단 상태줄을 누르면 즉시 다시 읽습니다
 $('status').addEventListener('click', () => load());
-
-// '오늘' 표기와 다음 예정 시각이 시간 흐름에 맞게 유지되도록
 setInterval(() => { if ($('status').dataset.live === 'on') $('statusText').textContent = syncLabel(); }, 60000);
 
 /* ==================================================================
-   9. 유틸 · 샘플
+   9. 유틸
    ================================================================== */
 function pad(n){ return String(n).padStart(2,'0'); }
 function keyOf(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
