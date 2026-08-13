@@ -40,6 +40,39 @@ body{
 }
 .wrap{max-width:520px;margin:0 auto;padding:0 20px}
 
+/* ── 비밀번호 화면 ─────────────────────────────── */
+.gate{
+  position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:26px;
+  background:linear-gradient(158deg,#FBDCE9 0%,#EFDEF6 38%,#DFE4FA 68%,#D6EAFA 100%);
+  -webkit-user-select:none;user-select:none;
+}
+.gate[hidden]{display:none}
+.gatebox{width:100%;max-width:330px;text-align:center}
+.gmarks{display:flex;gap:7px;justify-content:center;margin-bottom:20px}
+.gmarks i{width:11px;height:11px}
+.gmarks i:nth-child(1){background:#FF7A93;
+  clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.gmarks i:nth-child(2){background:#7B6BF0;border-radius:2px}
+.gmarks i:nth-child(3){background:#3EA0F0;border-radius:50%}
+
+.gtitle{font-size:23px;font-weight:800;letter-spacing:-.04em;line-height:1.35;color:var(--ink)}
+.gdesc{margin:11px 0 26px;font-size:13px;color:var(--ink-2);line-height:1.6;word-break:keep-all}
+
+.gform{display:flex;flex-direction:column;gap:9px}
+.gform[hidden]{display:none}
+.gate input{
+  height:50px;border:0;border-radius:16px;background:rgba(255,255,255,.75);
+  padding:0 16px;font-family:inherit;font-size:16px;color:var(--ink);
+  text-align:center;letter-spacing:.14em;width:100%;
+}
+.gate input:focus{outline:2px solid var(--accent);background:#fff}
+.gbtn{height:50px;border:0;border-radius:16px;background:var(--ink);color:#fff;
+  font-family:inherit;font-size:15px;font-weight:800;cursor:pointer}
+.gbtn:active{opacity:.85}
+.gerr{min-height:17px;margin-top:12px;font-size:12.5px;font-weight:700;color:#D8443C}
+.gwait{font-size:13px;font-weight:700;color:var(--ink-2)}
+.gwait[hidden]{display:none}
+
 /* ── 그라데이션 헤더 ───────────────────────────── */
 .hero{
   background:linear-gradient(158deg,#FBDCE9 0%,#EFDEF6 38%,#DFE4FA 68%,#D6EAFA 100%);
@@ -202,6 +235,22 @@ footer{padding:22px 0 30px;text-align:center;font-size:10.5px;color:var(--ink-3)
 </style>
 </head>
 <body>
+
+<div class="gate" id="gate">
+  <div class="gatebox">
+    <div class="gmarks"><i></i><i></i><i></i></div>
+    <div class="gtitle">특화마케팅팀<br>반상회 일정표</div>
+    <p class="gdesc">팀 내부용 페이지입니다.<br>비밀번호를 입력해 주세요.</p>
+
+    <div class="gwait" id="gwait">확인 중</div>
+    <div class="gform" id="gform" hidden>
+      <input id="pwInput" type="password" inputmode="text" autocomplete="current-password"
+             placeholder="비밀번호" aria-label="비밀번호">
+      <button class="gbtn" id="pwBtn" type="button">들어가기</button>
+    </div>
+    <div class="gerr" id="gerr"></div>
+  </div>
+</div>
 
 <div class="hero">
   <div class="wrap">
@@ -381,22 +430,71 @@ async function load({ silent = false } = {}) {
     lastSync = Date.now();
     setStatus('on', syncLabel());
     render();
+    hideGate();
   } catch (err) {
     console.error(err);
+    if (err.auth) { showGate(err.message); return; }
     setStatus('err', rows.length ? '새로고침 실패' : '불러오지 못했습니다');
     if (!rows.length) { $('grid').innerHTML = ''; $('sheetBody').innerHTML = errorBox(err); }
   }
 }
+
+/* ==================================================================
+   3-1. 비밀번호
+   ================================================================== */
+/* 브라우저를 닫으면 사라지는 저장소. 막혀 있는 환경에서는 메모리에만 담습니다 */
+const store = (() => {
+  const mem = {};
+  return {
+    get(k) { try { return sessionStorage.getItem(k); } catch (e) { return mem[k] ?? null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) { mem[k] = v; } },
+  };
+})();
+
+function showGate(msg) {
+  store.set('pw', '');                       // 틀린 값은 지워서 다시 묻습니다
+  $('gate').hidden = false;
+  $('gwait').hidden = true;
+  $('gform').hidden = false;
+  $('gerr').textContent = msg || '';
+  $('pwInput').value = '';
+  $('pwInput').focus();
+}
+
+function hideGate() { $('gate').hidden = true; }
+
+async function submitPw() {
+  const v = $('pwInput').value.trim();
+  if (!v) { $('gerr').textContent = '비밀번호를 입력해 주세요.'; return; }
+  store.set('pw', v);
+  $('gform').hidden = true;
+  $('gwait').hidden = false;
+  $('gerr').textContent = '';
+  await load({ silent: true });
+  scheduleNext();
+}
+
+$('pwBtn').addEventListener('click', submitPw);
+$('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitPw(); });
 
 /* 앱스스크립트 웹앱에서 { headers, rows } 형태로 받습니다.
    헤더를 붙이면 preflight 요청이 생겨 차단되니 그냥 fetch만 합니다 */
 async function fetchApi() {
   const u = CONFIG.API_URL;
   if (!u || u.startsWith('PUT_')) throw new Error('API_URL이 비어 있습니다');
-  const res = await fetch(u + (u.includes('?') ? '&' : '?') + 't=' + Date.now());
+  const q = (u.includes('?') ? '&' : '?')
+          + 't=' + Date.now()
+          + '&k=' + encodeURIComponent(store.get('pw') || '');
+  const res = await fetch(u + q);
   if (!res.ok) throw new Error('HTTP ' + res.status);
+
   const data = await res.json();
-  if (data.error) throw new Error(data.error);
+  if (data.error === 'AUTH') {
+    const e = new Error(data.message || '비밀번호가 맞지 않습니다.');
+    e.auth = true;
+    throw e;
+  }
+  if (data.error) throw new Error(data.message || data.error);
 
   const map = mapFields(data.headers || []);
   return (data.rows || [])
@@ -872,7 +970,9 @@ function fromKey(k){ const [y,m,d] = k.split('-').map(Number); return new Date(y
 function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-load().then(scheduleNext);
+/* 저장된 비밀번호로 먼저 시도합니다.
+   비밀번호를 설정하지 않은 상태라면 그대로 통과해 화면이 바로 열립니다 */
+load({ silent: true }).then(scheduleNext);
 $('foot').textContent = '업데이트 ' + SLOTS.map(h => pad(h) + ':00').join(' · ');
 </script>
 </body>
