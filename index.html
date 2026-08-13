@@ -11,7 +11,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="특화마케팅팀 반상회 일정표">
 <meta property="og:description" content="월별 반상회 일정과 통계를 한눈에 확인합니다.">
-<meta property="og:image" content="https://jongwoo-jang.github.io/lecture_time/og-image.png">
+<meta property="og:image" content="og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="특화마케팅팀 반상회 일정표">
 <meta name="apple-mobile-web-app-title" content="반상회 일정표">
@@ -44,27 +44,29 @@ body{
 .hero{
   background:linear-gradient(158deg,#FBDCE9 0%,#EFDEF6 38%,#DFE4FA 68%,#D6EAFA 100%);
   padding:calc(16px + env(safe-area-inset-top)) 0 34px;
+  /* 날짜를 탭할 때 브라우저가 글자를 선택해 핸들이 뜨는 것을 막습니다 */
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
 }
 
 .bar{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.ptitle{font-size:13.5px;font-weight:800;letter-spacing:-.03em;color:var(--ink);
-  word-break:keep-all}
+.ptitle{font-size:17px;font-weight:800;letter-spacing:-.035em;color:var(--ink);
+  word-break:keep-all;line-height:1.25}
 .yr{font-size:12.5px;font-weight:700;color:var(--ink-2);margin-left:9px;letter-spacing:.01em}
 
-.mrow{display:flex;align-items:center;gap:4px;margin-top:2px}
-.mnum{font-size:31px;font-weight:800;letter-spacing:-.045em;line-height:1.1;
-  min-width:74px;text-align:center}
+.mrow{display:flex;align-items:center;gap:4px;margin-top:6px}
+.mnum{font-size:28px;font-weight:800;letter-spacing:-.045em;line-height:1.1;
+  min-width:70px;text-align:center}
 .mrow button{
-  height:34px;min-width:34px;border:0;border-radius:999px;cursor:pointer;
-  background:rgba(255,255,255,.6);color:var(--ink);
-  font-family:inherit;font-size:16px;line-height:1;flex:none;
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  height:34px;min-width:26px;border:0;background:none;cursor:pointer;
+  color:var(--ink-2);font-family:inherit;font-size:21px;line-height:1;flex:none;padding:0;
 }
-.mrow button:active{background:#fff}
-.mrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mrow button:active{color:var(--ink)}
+.mrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
 
-.status{display:flex;align-items:center;gap:5px;margin-top:7px;
+.statusrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px}
+.status{display:flex;align-items:center;gap:5px;min-width:0;
   font-size:11.5px;color:var(--ink-2);cursor:pointer}
+.status span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dot{width:5px;height:5px;border-radius:50%;background:var(--ink-3);flex:none}
 .status[data-live="on"] .dot{background:#2FBE7E}
 .status[data-live="err"] .dot{background:#F0544F}
@@ -81,40 +83,44 @@ body{
   box-shadow:0 2px 8px rgba(60,40,110,.13)}
 .toggle svg{width:19px;height:19px;display:block}
 
-/* 필터 */
-.filters{display:flex;gap:6px;margin-top:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.filters::-webkit-scrollbar{display:none}
-.sel{position:relative;flex:none}
+/* 필터 — 네 개가 한 줄에 들어가도록 폭을 나눠 씁니다 */
+.filters{display:flex;gap:5px;margin-top:12px;align-items:center}
+.sel{position:relative;flex:1 1 0;min-width:0}
+.sel[data-on="1"]{flex:1.7 1 0}          /* 선택된 필터에 폭을 더 줍니다 */
 .sel[hidden]{display:none}
 .sel select{
   appearance:none;-webkit-appearance:none;font-family:inherit;
-  font-size:12.5px;font-weight:700;color:var(--ink);
+  font-size:12px;font-weight:700;color:var(--ink);
   background:rgba(255,255,255,.6);border:0;border-radius:999px;
-  padding:0 25px 0 13px;height:32px;max-width:145px;
+  width:100%;padding:0 20px 0 10px;height:32px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
 .sel::after{
-  content:"";position:absolute;right:10px;top:0;bottom:0;width:10px;
+  content:"";position:absolute;right:7px;top:0;bottom:0;width:9px;
   pointer-events:none;
-  background:no-repeat center/10px 6px
+  background:no-repeat center/9px 5.5px
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236E6880' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 .sel[data-on="1"] select{background:var(--ink);color:#fff}
 .sel[data-on="1"]::after{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
-.reset{flex:none;height:32px;padding:0 10px;border:0;background:none;color:var(--ink-2);
-  font-family:inherit;font-size:12.5px;font-weight:700;text-decoration:underline;
-  text-underline-offset:3px;cursor:pointer}
+.reset{flex:none;height:27px;padding:0 12px;border:0;border-radius:999px;cursor:pointer;
+  background:rgba(255,255,255,.7);color:var(--ink);
+  font-family:inherit;font-size:11.5px;font-weight:700;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.reset:active{background:#fff}
+.reset[hidden]{display:none}
 
 /* 달력 */
 .cal{margin-top:16px;touch-action:pan-y}
 .cal[hidden]{display:none}
-.dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px}
+.dow{display:grid;grid-template-columns:repeat(5,1fr);margin-bottom:4px}
 .dow span{text-align:center;font-size:10.5px;font-weight:700;color:var(--ink-2);
   opacity:.75;letter-spacing:.08em;padding:4px 0}
 
-.grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr)}
 .cell{position:relative;border:0;background:none;padding:3px 0 4px;min-height:50px;
   font-family:inherit;cursor:pointer;display:flex;flex-direction:column;
   align-items:center;gap:5px}
@@ -123,8 +129,10 @@ body{
   font-size:14.5px;font-weight:600;color:var(--ink);
   transition:background .16s,box-shadow .16s}
 .cell.dim .num{color:var(--ink-3);opacity:.55}
-.cell.today .num{color:var(--accent);font-weight:800}
+.cell.today .num{color:var(--accent);font-weight:800;font-size:17px;
+  background:rgba(109,74,224,.11)}
 .cell.sel .num{background:#fff;font-weight:800;box-shadow:0 4px 14px rgba(70,45,130,.18)}
+.cell.today.sel .num{color:var(--accent)}
 
 .dots{display:flex;gap:3px;height:8px;align-items:center}
 .dots i{width:7px;height:7px;flex:none}
@@ -222,8 +230,11 @@ footer{padding:22px 0 30px;text-align:center;font-size:10.5px;color:var(--ink-3)
       <span class="yr" id="year"></span>
     </div>
 
-    <div class="status" id="status" data-live="off">
-      <span class="dot"></span><span id="statusText">불러오는 중</span>
+    <div class="statusrow">
+      <div class="status" id="status" data-live="off">
+        <span class="dot"></span><span id="statusText">불러오는 중</span>
+      </div>
+      <button class="reset" id="reset" type="button" hidden>필터 초기화</button>
     </div>
 
     <div class="filters">
@@ -231,11 +242,10 @@ footer{padding:22px 0 30px;text-align:center;font-size:10.5px;color:var(--ink-3)
       <label class="sel" id="wRegion"><select id="fRegion"></select></label>
       <label class="sel" id="wBranch"><select id="fBranch"></select></label>
       <label class="sel" id="wTeacher"><select id="fTeacher"></select></label>
-      <button class="reset" id="reset" hidden>초기화</button>
     </div>
 
     <section class="cal" id="cal">
-      <div class="dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+      <div class="dow"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span></div>
       <div class="grid" id="grid"></div>
     </section>
   </div>
@@ -286,10 +296,10 @@ const ALIASES = {
 
 /* 상단 필터 — 앞의 선택이 뒤의 목록을 좁힙니다 */
 const FIELDS = [
-  { key:'division', id:'fDivision', wrap:'wDivision', label:'전체 영업부' },
-  { key:'region',   id:'fRegion',   wrap:'wRegion',   label:'전체 권역' },
-  { key:'branch',   id:'fBranch',   wrap:'wBranch',   label:'전체 지점' },
-  { key:'teacher',  id:'fTeacher',  wrap:'wTeacher',  label:'전체 강사' },
+  { key:'division', id:'fDivision', wrap:'wDivision', label:'영업부' },
+  { key:'region',   id:'fRegion',   wrap:'wRegion',   label:'권역' },
+  { key:'branch',   id:'fBranch',   wrap:'wBranch',   label:'지점' },
+  { key:'teacher',  id:'fTeacher',  wrap:'wTeacher',  label:'강사' },
 ];
 
 /* 통계 탭 */
@@ -299,6 +309,24 @@ const STAT_TABS = [
   { key:'branch',   label:'지점' },
   { key:'teacher',  label:'강사' },
 ];
+
+/* 표기 순서. 여기에 없는 값은 뒤쪽에 가나다순으로 붙습니다.
+   지점과 강사는 목록을 비워둬서 가나다순으로 정렬됩니다 */
+const ORDER = {
+  division: ['수도권교차','지방교차'],
+  region:   ['강북강남','강서경기','충청호남','부산대구'],
+};
+
+function cmpField(field, a, b) {
+  const list = ORDER[field];
+  if (list) {
+    const ia = list.indexOf(a), ib = list.indexOf(b);
+    const ra = ia === -1 ? list.length : ia;
+    const rb = ib === -1 ? list.length : ib;
+    if (ra !== rb) return ra - rb;
+  }
+  return String(a).localeCompare(String(b), 'ko');
+}
 
 /* 달력 표식 모양 — 이름을 넣고 빼기만 하면 됩니다. 목록에 없는 강사는 원형입니다 */
 const SHAPE_STAR   = ['장종우','김남곤','임세연','신혜경','오윤정'];
@@ -321,8 +349,16 @@ const DOW = ['일','월','화','수','목','금','토'];
 
 let rows = [];
 let byDate = new Map();
+/* 주말에는 달력에 칸이 없으므로 가까운 평일을 고릅니다 */
+function nearestWeekday(d) {
+  const t = new Date(d);
+  if (t.getDay() === 6) t.setDate(t.getDate() + 2);
+  else if (t.getDay() === 0) t.setDate(t.getDate() + 1);
+  return t;
+}
+
 let view = startOfMonth(new Date());
-let selected = keyOf(new Date());
+let selected = keyOf(nearestWeekday(new Date()));
 let filters = { division:'', region:'', branch:'', teacher:'' };
 let panel = 'cal';                       // 'cal' | 'stats'
 let statBy = 'branch';
@@ -513,7 +549,13 @@ function index() {
     if (!byDate.has(r.date)) byDate.set(r.date, []);
     byDate.get(r.date).push(r);
   }
-  for (const list of byDate.values()) list.sort((a, b) => a.sort - b.sort);
+  for (const list of byDate.values()) {
+    list.sort((a, b) =>
+      a.sort - b.sort
+      || cmpField('division', a.division, b.division)
+      || cmpField('region',   a.region,   b.region)
+      || cmpField('branch',   a.branch,   b.branch));
+  }
 }
 
 const passes = (r, except) =>
@@ -527,7 +569,7 @@ function buildFilters() {
   for (const f of FIELDS) {
     const el = $(f.id);
     const vals = [...new Set(rows.filter(r => passes(r, f.key)).map(r => r[f.key]).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, 'ko'));
+      .sort((a, b) => cmpField(f.key, a, b));
     if (filters[f.key] && !vals.includes(filters[f.key])) vals.push(filters[f.key]);
 
     el.innerHTML = `<option value="">${f.label}</option>`
@@ -582,42 +624,49 @@ function renderMonth() {
   $('year').textContent = view.getFullYear() + '년';
   $('month').textContent = (view.getMonth() + 1) + '월';
 
+  // 월~금만 그립니다. 시작은 1일이 속한 주의 월요일 (1일이 주말이면 다음 월요일)
   const first = startOfMonth(view);
+  const last = new Date(view.getFullYear(), view.getMonth() + 1, 0);
   const start = new Date(first);
-  start.setDate(1 - first.getDay());
+  const wd = first.getDay();
+  if (wd === 6) start.setDate(first.getDate() + 2);
+  else if (wd === 0) start.setDate(first.getDate() + 1);
+  else start.setDate(first.getDate() - (wd - 1));
+
   const todayKey = keyOf(new Date());
   const cells = [];
+  const monday = new Date(start);
 
-  for (let i = 0; i < 42; i++) {
-    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-    if (i >= 35 && d.getMonth() !== view.getMonth()) break;
+  while (monday <= last) {
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      const key = keyOf(d);
+      const items = dayItems(key);
+      const cls = ['cell'];
+      if (d.getMonth() !== view.getMonth()) cls.push('dim');
+      if (key === selected) cls.push('sel');
+      if (key === todayKey) cls.push('today');
 
-    const key = keyOf(d);
-    const items = dayItems(key);
-    const cls = ['cell'];
-    if (d.getMonth() !== view.getMonth()) cls.push('dim');
-    if (key === selected) cls.push('sel');
-    if (key === todayKey) cls.push('today');
+      // 같은 모양·같은 색은 한 번만 찍고 최대 3개까지 보여줍니다
+      const seen = new Set(), marks = [];
+      for (const r of items) {
+        const g = colorKey(r), sh = shapeOf(r.teacher), k = sh + '|' + g;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        marks.push(`<i class="${sh}" style="background:${hueOf(g)[1]}"></i>`);
+        if (marks.length === 3) break;
+      }
 
-    // 같은 모양·같은 색은 한 번만 찍고 최대 3개까지 보여줍니다
-    const seen = new Set(), marks = [];
-    for (const r of items) {
-      const g = colorKey(r), sh = shapeOf(r.teacher), k = sh + '|' + g;
-      if (seen.has(k)) continue;
-      seen.add(k);
-      marks.push(`<i class="${sh}" style="background:${hueOf(g)[1]}"></i>`);
-      if (marks.length === 3) break;
+      cells.push(
+        `<button class="${cls.join(' ')}" data-key="${key}" type="button"
+                 aria-label="${d.getMonth()+1}월 ${d.getDate()}일 강의 ${items.length}건"
+                 ${key === selected ? 'aria-current="date"' : ''}>
+           <span class="num">${d.getDate()}</span>
+           <span class="dots">${marks.join('')}</span>
+         </button>`
+      );
     }
-    const dots = marks.join('');
-
-    cells.push(
-      `<button class="${cls.join(' ')}" data-key="${key}" type="button"
-               aria-label="${d.getMonth()+1}월 ${d.getDate()}일 강의 ${items.length}건"
-               ${key === selected ? 'aria-current="date"' : ''}>
-         <span class="num">${d.getDate()}</span>
-         <span class="dots">${dots}</span>
-       </button>`
-    );
+    monday.setDate(monday.getDate() + 7);
   }
   $('grid').innerHTML = cells.join('');
 }
@@ -653,7 +702,7 @@ function dayHtml() {
     const h = parseInt(r.time, 10);
     const ampm = isNaN(h) ? '' : (h < 12 ? '오전' : '오후');
     const title = r.title || r.branch || r.center || '강의';
-    const sub = [r.division, r.region, r.center, r.branch, r.teacher, r.status, r.note]
+    const sub = [r.division, r.region, r.branch, r.center, r.teacher, r.status, r.note]
       .filter(Boolean).filter(x => x !== title).join(' · ');
     const mark = r.teacher ? givenName(r.teacher)
                : (r.branch || r.center || '·').trim().slice(0, 2);
@@ -697,8 +746,12 @@ function statsHtml() {
     const k = r[statBy] || '미지정';
     tally.set(k, (tally.get(k) || 0) + 1);
   }
-  const ranked = [...tally.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'));
-  const max = ranked[0][1];
+  // 강사는 횟수 많은 순, 나머지는 지정한 표기 순서로 고정합니다
+  const ranked = [...tally.entries()].sort((a, b) =>
+    statBy === 'teacher'
+      ? (b[1] - a[1] || cmpField(statBy, a[0], b[0]))
+      : cmpField(statBy, a[0], b[0]));
+  const max = Math.max(...ranked.map(e => e[1]));
 
   const bars = ranked.map(([name, n]) => {
     const solid = hueOf(name)[1];
